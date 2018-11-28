@@ -15,16 +15,15 @@
 
 CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
-    movie VARCHAR NOT NULL UNIQUE,
-    timing timestamp NOT NULL UNIQUE
+    movie VARCHAR NOT NULL UNIQUE
     --poster 
 );
 
 CREATE TABLE IF NOT EXISTS timings(
     id Serial PRIMARY KEY,
     movie_period VARCHAR UNIQUE,
-    movie VARCHAR,
-    FOREIGN KEY (movie) REFERENCES movies(movie)
+    movie_id VARCHAR,
+    FOREIGN KEY (movie_id) REFERENCES movies(id)
 );
 
 CREATE TABLE IF NOT EXISTS reservations(
