@@ -1,0 +1,7 @@
+{
+	"Host"     : "Enter Host Name",
+	"User"     : "Enter Username",
+	"Password" : "Enter Password",
+	"Dbname"  : "Enter Cinema Name",
+	"Port"     : "Enter Port Number"
+}

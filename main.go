@@ -27,7 +27,7 @@ type User struct {
 var db *sql.DB
 
 func main() {
-	file, _ := os.Open("conf.json")
+	file, _ := os.Open("config.json")
 	defer file.Close()
 	decoder := json.NewDecoder(file)
 	config := Configuration{}
