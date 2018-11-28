@@ -4,7 +4,7 @@
 -- DROP TABLE movies;
 
 
-CREATE TABLE halls(
+ CREATE TABLE IF NOT EXISTS halls (
     id Serial PRIMARY KEY,
     seats NUMERIC,
     emptyseats VARCHAR ,
@@ -12,20 +12,22 @@ CREATE TABLE halls(
     movie VARCHAR,
     FOREIGN KEY (movie) REFERENCES movies(movie) ON DELETE CASCADE
 );
-CREATE TABLE movies(
+
+CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
     movie VARCHAR NOT NULL UNIQUE,
     timing timestamp NOT NULL UNIQUE
     --poster 
 );
-CREATE TABLE timings(
+
+CREATE TABLE IF NOT EXISTS timings(
     id Serial PRIMARY KEY,
     movie_period VARCHAR UNIQUE,
     movie VARCHAR,
     FOREIGN KEY (movie) REFERENCES movies(movie)
 );
 
-CREATE TABLE reservations(
+CREATE TABLE IF NOT EXISTS reservations(
     id Serial PRIMARY KEY,
     hall integer,
     seat VARCHAR,
