@@ -5,7 +5,7 @@
 
 
  CREATE TABLE IF NOT EXISTS halls (
-    id Serial PRIMARY KEY,
+    id NUMERIC PRIMARY KEY,
     seats NUMERIC,
     emptyseats VARCHAR ,
     reservedseats VARCHAR,
@@ -15,13 +15,22 @@
 
 CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
-    movie VARCHAR NOT NULL UNIQUE
+    title VARCHAR NOT NULL UNIQUE
     --poster 
 );
+CREATE TABLE IF NOT EXISTS seats(
+    seat_status boolean,
+    seat_title VARCHAR,
+    hall NUMERIC,
+    movie_period timestamp,
+    PRIMARY KEY(hall,seat_title,movie_period),
+    FOREIGN KEY (hall) REFERENCES halls(id),
+    FOREIGN KEY (movie_period) REFERENCES timings(movie_period)
 
+)
 CREATE TABLE IF NOT EXISTS timings(
     id Serial PRIMARY KEY,
-    movie_period VARCHAR UNIQUE,
+    movie_period timestamp UNIQUE,
     movie_id VARCHAR,
     FOREIGN KEY (movie_id) REFERENCES movies(id)
 );
