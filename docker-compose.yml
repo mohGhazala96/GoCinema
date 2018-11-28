@@ -1,0 +1,21 @@
+version: "2.1"
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_NAME: mycinema
+    ports:
+      - 3000:8080
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: healthcheck/postgres:alpine 
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mycinema
+    ports:
+      - 5432:5432
