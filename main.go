@@ -28,7 +28,7 @@ type User struct {
 var db *sql.DB
 
 func myHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, username FROM users")
+	rows, err := db.Query("SELECT id, title FROM movies")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -36,17 +36,17 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	fmt.Fprintf(w, "Welcome to the server\n")
-	fmt.Fprintln(w, "ID | Name")
+	fmt.Fprintln(w, "ID | Title")
 	fmt.Fprintln(w, "---+--------")
 	for rows.Next() {
 		var (
-			id       int
-			username string
+			id    int
+			title string
 		)
 
-		rows.Scan(&id, &username)
+		rows.Scan(&id, &title)
 
-		fmt.Fprintf(w, "%2d | %s\n", id, username)
+		fmt.Fprintf(w, "%2d | %s\n", id, title)
 	}
 }
 
