@@ -1,8 +1,8 @@
-DROP TABLE cinemas;
-DROP TABLE movies;
-DROP TABLE halls;
-DROP TABLE users;
-DROP TABLE reservations;
+-- DROP TABLE cinemas;
+-- DROP TABLE movies;
+-- DROP TABLE halls;
+-- DROP TABLE users;
+-- DROP TABLE reservations;
 
 CREATE TABLE cinemas(
     id Serial PRIMARY KEY,

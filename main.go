@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -27,27 +26,18 @@ type User struct {
 var db *sql.DB
 
 func main() {
-	file, _ := os.Open("conf.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
 	config := Configuration{}
-	err := decoder.Decode(&config)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	databaseConfig := make(map[string]string)
-	databaseConfig["DBHOST"] = config.Host
-	databaseConfig["DBPORT"] = config.Port
-	databaseConfig["DBUSER"] = config.User
-	databaseConfig["DBPASS"] = config.Password
-	databaseConfig["DBNAME"] = config.Dbname
+	config.Dbname = os.Getenv("DATABASE_NAME")
+	config.Host = os.Getenv("DATABASE_HOST")
+	config.User = os.Getenv("DATABASE_USER")
+	config.Password = os.Getenv("DATABASE_PASSWORD")
+	config.Port = os.Getenv("DATABASE_PORT")
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		databaseConfig["DBHOST"], databaseConfig["DBPORT"],
-		databaseConfig["DBUSER"], databaseConfig["DBPASS"], databaseConfig["DBNAME"])
+		config.Host, config.Port, config.User, config.Password, config.Dbname)
 
-	db, err = sql.Open("postgres", psqlInfo)
+	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}

@@ -4,6 +4,10 @@ services:
     build: .
     environment:
       DATABASE_NAME: mycinema
+      DATABASE_HOST: db
+      DATABASE_USER: root
+      DATABASE_PASSWORD: secret
+      DATABASE_PORT: 5432
     ports:
       - 3000:8080
     depends_on:
@@ -12,6 +16,7 @@ services:
   db:
     image: healthcheck/postgres:alpine 
     volumes:
+      - ./data.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: root
@@ -19,3 +24,4 @@ services:
       POSTGRES_DB: mycinema
     ports:
       - 5432:5432
+    

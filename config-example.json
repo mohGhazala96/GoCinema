@@ -1,7 +1,0 @@
-{
-	"Host"     : "localhost",
-	"User"     : "root",
-	"Password" : "secret",
-	"Dbname"  : "mycinema",
-	"Port"     : "5432"
-}

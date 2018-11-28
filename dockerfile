@@ -9,16 +9,14 @@ RUN go get -u github.com/kardianos/govendor
 WORKDIR /go/src/app
 COPY . .
 # Install dependencies
-RUN govendor init
 RUN govendor sync
 # Build the app
-RUN govendor build -o /go/src/app/myapp
+RUN govendor build -o /go/src/app/GoCinema
 # Run the app
-CMD [ "/go/src/app/myapp" ]
-
+CMD [ "/go/src/app/GoCinema" ]
 # Smallest container image
-FROM scratch
+FROM alpine
 # Copy built executable from base image to here
-COPY --from=builder /go/src/app/myapp /
+COPY --from=builder /go/src/app/GoCinema /
 # Run the app
-CMD [ "/myapp" ]
+CMD [ "/GoCinema" ]
