@@ -74,21 +74,21 @@ func main() {
 		panic(err)
 	}
 
-	rows, err := db.Query(`SELECT id, username FROM users`)
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		user := User{}
-		err = rows.Scan(&user.id, &user.username)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(user.username)
-		fmt.Println(user.id)
+	// rows, err := db.Query(`SELECT id, username FROM users`)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	user := User{}
+	// 	err = rows.Scan(&user.id, &user.username)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	fmt.Println(user.username)
+	// 	fmt.Println(user.id)
 
-	}
+	// }
 
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
