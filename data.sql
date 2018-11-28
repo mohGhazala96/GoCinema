@@ -16,7 +16,9 @@
 CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
     movie VARCHAR NOT NULL UNIQUE,
-    timing timestamp NOT NULL UNIQUE
+    movie_period VARCHAR,
+    FOREIGN KEY (movie_period) REFERENCES timings(movie_period)
+
     --poster 
 );
 
