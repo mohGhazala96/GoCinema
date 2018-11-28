@@ -1,58 +1,45 @@
--- DROP TABLE users;
 -- DROP TABLE reservations;
--- DROP TABLE movies;
 -- DROP TABLE halls;
--- DROP TABLE cinemas;
+-- DROP TABLE timings;
+-- DROP TABLE movies;
 
-CREATE TABLE cinemas(
-    id Serial PRIMARY KEY,
-    cinema VARCHAR  NOT NULL UNIQUE,
-    halls NUMERIC
-);
+
 CREATE TABLE halls(
     id Serial PRIMARY KEY,
-    cinema VARCHAR,
     seats NUMERIC,
     emptyseats VARCHAR ,
     reservedseats VARCHAR,
-    FOREIGN KEY (cinema) REFERENCES cinemas(cinema) ON DELETE CASCADE
+    movie VARCHAR,
+    FOREIGN KEY (movie) REFERENCES movies(movie) ON DELETE CASCADE
 );
 CREATE TABLE movies(
     id Serial PRIMARY KEY,
     movie VARCHAR NOT NULL UNIQUE,
-    cinema VARCHAR,
-    hall integer,
-    timing timestamp NOT NULL UNIQUE,
-    FOREIGN KEY (cinema) REFERENCES cinemas(cinema) ON DELETE CASCADE,
-    FOREIGN KEY (hall) REFERENCES halls(id) ON DELETE CASCADE
-
+    timing timestamp NOT NULL UNIQUE
+    --poster 
+);
+CREATE TABLE timings(
+    id Serial PRIMARY KEY,
+    movie_period VARCHAR UNIQUE,
+    movie VARCHAR,
+    FOREIGN KEY (movie) REFERENCES movies(movie)
 );
 
 CREATE TABLE reservations(
     id Serial PRIMARY KEY,
-    username VARCHAR,
     hall integer,
-    cinema VARCHAR,
     seat VARCHAR,
     movie varchar,
+    useremail varchar,
     timing timestamp NOT NULL UNIQUE,
     FOREIGN KEY (hall) REFERENCES halls(id),
-    FOREIGN KEY (cinema) REFERENCES cinemas(cinema),
     FOREIGN KEY (movie) REFERENCES movies(movie),
-    FOREIGN KEY (timing) REFERENCES movies(timing)
+    FOREIGN KEY (timing) REFERENCES timings(movie_period)
 
 );
 
-CREATE TABLE users(
-    id Serial PRIMARY KEY,
-    username VARCHAR,
-    email VARCHAR,
-    phone NUMERIC,
-    reservations integer,
-    FOREIGN KEY (reservations) REFERENCES reservations(id)
-);
 
 
 
-Insert INTO users("username") VALUES 
-('hossam');
+-- Insert INTO users("username") VALUES 
+-- ('hossam');
