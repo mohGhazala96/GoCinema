@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -25,6 +27,29 @@ type User struct {
 
 var db *sql.DB
 
+func myHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT id, username FROM users")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	fmt.Fprintf(w, "Welcome to the server\n")
+	fmt.Fprintln(w, "ID | Name")
+	fmt.Fprintln(w, "---+--------")
+	for rows.Next() {
+		var (
+			id       int
+			username string
+		)
+
+		rows.Scan(&id, &username)
+
+		fmt.Fprintf(w, "%2d | %s\n", id, username)
+	}
+}
+
 func main() {
 	config := Configuration{}
 	config.Dbname = os.Getenv("DATABASE_NAME")
@@ -32,12 +57,15 @@ func main() {
 	config.User = os.Getenv("DATABASE_USER")
 	config.Password = os.Getenv("DATABASE_PASSWORD")
 	config.Port = os.Getenv("DATABASE_PORT")
+	var webPort = os.Getenv("WEB_PORT")
+
+	var err error
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
 
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -61,5 +89,10 @@ func main() {
 		fmt.Println(user.id)
 
 	}
+
+	http.HandleFunc("/", myHandler)
+	//http.HandleFunc("/cache", myCachedHandler)
+	log.Print("Listening on " + ":" + webPort + "...")
+	http.ListenAndServe(":"+webPort, nil)
 
 }
