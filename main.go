@@ -17,8 +17,7 @@ type Configuration struct {
 	Port     string
 }
 
-var Config Configuration
-var conf map[string]string
+var config Configuration
 
 type User struct {
 	id       int
@@ -31,24 +30,22 @@ func main() {
 	file, _ := os.Open("conf.json")
 	defer file.Close()
 	decoder := json.NewDecoder(file)
-	Config := Configuration{}
-	err := decoder.Decode(&Config)
+	config := Configuration{}
+	err := decoder.Decode(&config)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println(Config)        // output: [UserA, UserB]
-	fmt.Println(Config.Dbname) // output: [UserA, UserB]
-	conf := make(map[string]string)
-	conf["DBHOST"] = Config.Host
-	conf["DBPORT"] = Config.Port
-	conf["DBUSER"] = Config.User
-	conf["DBPASS"] = Config.Password
-	conf["DBNAME"] = Config.Dbname
+	databaseConfig := make(map[string]string)
+	databaseConfig["DBHOST"] = config.Host
+	databaseConfig["DBPORT"] = config.Port
+	databaseConfig["DBUSER"] = config.User
+	databaseConfig["DBPASS"] = config.Password
+	databaseConfig["DBNAME"] = config.Dbname
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		conf["DBHOST"], conf["DBPORT"],
-		conf["DBUSER"], conf["DBPASS"], conf["DBNAME"])
+		databaseConfig["DBHOST"], databaseConfig["DBPORT"],
+		databaseConfig["DBUSER"], databaseConfig["DBPASS"], databaseConfig["DBNAME"])
 
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
