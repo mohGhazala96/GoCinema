@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	_ "time"
 
 	_ "github.com/lib/pq"
 )
@@ -23,6 +27,34 @@ var config Configuration
 type User struct {
 	id       int
 	username string
+}
+
+type Movies struct {
+	Vote_count        int64
+	Id                int64
+	Video             bool
+	Vote_average      float64
+	Title             string
+	Popularity        float64
+	Poster_path       string
+	Original_language string
+	Original_title    string
+	Genre_ids         []int64
+	Backdrop_path     string
+	Adult             bool
+	Overview          string
+	Release_date      string
+}
+type Dates struct {
+	Maximum string
+	Minimum string
+}
+type moviesReponse struct {
+	Results       []Movies
+	Page          int64
+	Total_results int64
+	Dates         Dates
+	Total_pages   int64
 }
 
 var db *sql.DB
@@ -49,8 +81,43 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%2d | %s\n", id, title)
 	}
 }
+func getJson(url string, target interface{}) error {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
 
+	payload := strings.NewReader("{}")
+
+	req, err := http.NewRequest("GET", url, payload)
+	if err != nil {
+		panic(err)
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	// body, _ := ioutil.ReadAll(res.Body)
+
+	// fmt.Println(string(body))
+
+	return json.NewDecoder(res.Body).Decode(target)
+}
 func main() {
+	var err error
+
+	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
+
+	movies := new(moviesReponse)
+	getJson(url, movies)
+	fmt.Println(movies.Results[0].Id)
+	fmt.Println(movies.Results[0].Original_language)
+	//http://image.tmdb.org/t/p/w500/
+	fmt.Println(movies.Results[1].Poster_path)
+	fmt.Println(movies.Results[0].Title)
+
 	config := Configuration{}
 	config.Dbname = os.Getenv("DATABASE_NAME")
 	config.Host = os.Getenv("DATABASE_HOST")
@@ -58,8 +125,6 @@ func main() {
 	config.Password = os.Getenv("DATABASE_PASSWORD")
 	config.Port = os.Getenv("DATABASE_PORT")
 	var webPort = os.Getenv("WEB_PORT")
-
-	var err error
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
@@ -73,22 +138,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// rows, err := db.Query(`SELECT id, username FROM users`)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer rows.Close()
-	// for rows.Next() {
-	// 	user := User{}
-	// 	err = rows.Scan(&user.id, &user.username)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	fmt.Println(user.username)
-	// 	fmt.Println(user.id)
-
-	// }
 
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
