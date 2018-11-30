@@ -83,6 +83,25 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 		rows.Scan(&id, &title, &release_date, &poster_path, &vote_average)
 		fmt.Fprintf(w, "%5d | %s | %s | %s | %f  \n", id, title, release_date, poster_path, vote_average)
 	}
+	rows, err = db.Query("SELECT id, seats,movie FROM halls")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	fmt.Fprintln(w, "ID | seats")
+	fmt.Fprintln(w, "---+--------")
+	for rows.Next() {
+		var (
+			id    int64
+			seats int
+			movie int64
+		)
+
+		rows.Scan(&id, &seats, &movie)
+		fmt.Fprintf(w, "%3d | %d | %d  \n", id, seats, movie)
+	}
 }
 func getJson(url string, target interface{}) error {
 	tr := &http.Transport{
@@ -103,12 +122,7 @@ func getJson(url string, target interface{}) error {
 	defer res.Body.Close()
 	return json.NewDecoder(res.Body).Decode(target)
 }
-
-func updateMovies() {
-	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
-	movies := new(moviesReponse)
-	getJson(url, movies)
-
+func insertMovies(movies *moviesReponse) {
 	for movieIndex := range movies.Results {
 		var sqlStatement string
 		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as isAvialabe where not exists (select * from movies where id=$1))"
@@ -121,8 +135,6 @@ func updateMovies() {
 			panic(err)
 		}
 	}
-	removeUnavialabeMoviesFromCinema(movies)
-	updateHalls(movies)
 }
 
 func removeUnavialabeMoviesFromCinema(movies *moviesReponse) {
@@ -186,6 +198,15 @@ func updateHalls(movies *moviesReponse) {
 }
 
 func updateCinema() {
+	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
+	movies := new(moviesReponse)
+	getJson(url, movies)
+	insertMovies(movies) //inserting new movies
+	removeUnavialabeMoviesFromCinema(movies)
+	updateHalls(movies)
+}
+
+func weeklyUpdate() {
 	fmt.Println("Updating Cinema")
 	currentTime := time.Now()
 	newDay := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day()+6, 0, 0, 0, 0, currentTime.Location())
@@ -197,9 +218,28 @@ func updateCinema() {
 	for {
 		time.Sleep(difference)
 		difference = 24 * time.Hour
-		updateMovies() // updates movies and halls
+		updateCinema() // updates movies and halls
 
 	}
+}
+
+func insertHalls(movies *moviesReponse) {
+	for movieCount := 0; movieCount < 20; movieCount++ {
+		var sqlStatement string
+		sqlStatement = "INSERT INTO halls (id,seats,movie) (select $1 as id, $2 as seats ,$3 as movie where not exists (select * from halls where id=$1))"
+		var err error
+		_, err = db.Exec(sqlStatement, movieCount, 200, movies.Results[movieCount].Id)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+func initCinema() {
+	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
+	movies := new(moviesReponse)
+	getJson(url, movies)
+	insertMovies(movies)
+	insertHalls(movies)
 }
 
 func main() {
@@ -224,7 +264,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go updateCinema()
+	//INTIALIZE ONLY ONCE
+	initCinema()
+	//WEEKLY UPDATES
+	//	go weeklyUpdate()
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
 	log.Print("Listening on " + ":" + webPort + "...")
