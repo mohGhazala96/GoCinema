@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	_ "time"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -29,6 +29,7 @@ type User struct {
 	username string
 }
 
+//structs for movies
 type Movies struct {
 	Vote_count        int64
 	Id                int64
@@ -57,6 +58,8 @@ type moviesReponse struct {
 	Total_pages   int64
 }
 
+//
+
 var db *sql.DB
 
 func myHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +70,6 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	fmt.Fprintf(w, "Welcome to the server\n")
 	fmt.Fprintln(w, "ID | Title")
 	fmt.Fprintln(w, "---+--------")
 	for rows.Next() {
@@ -98,13 +100,26 @@ func getJson(url string, target interface{}) error {
 		panic(err)
 	}
 	defer res.Body.Close()
-
-	// body, _ := ioutil.ReadAll(res.Body)
-
-	// fmt.Println(string(body))
-
 	return json.NewDecoder(res.Body).Decode(target)
 }
+func refreshDatabase() {
+
+}
+func addMoviesToDatabase() {
+	currentTime := time.Now()
+	newDay := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location())
+	difference := newDay.Sub(currentTime)
+	if difference < 0 {
+		newDay = newDay.Add(24 * time.Hour)
+		difference = newDay.Sub(currentTime)
+	}
+	for {
+		time.Sleep(difference)
+		difference = 24 * time.Hour
+		refreshDatabase()
+	}
+}
+
 func main() {
 	var err error
 

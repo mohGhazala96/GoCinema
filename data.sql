@@ -5,7 +5,9 @@
 CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
     title VARCHAR NOT NULL UNIQUE
-    
+    Release_date VARCHAR,
+    Poster_path VARCHAR,
+    Vote_average FLOAT
 );
 
 CREATE TABLE IF NOT EXISTS timings(
