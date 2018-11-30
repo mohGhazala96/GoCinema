@@ -62,7 +62,7 @@ type moviesReponse struct {
 var db *sql.DB
 
 func myHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average FROM movies")
+	rows, err := db.Query("SELECT id, title,release_date,poster_path FROM movies")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -77,11 +77,10 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 			title        string
 			release_date string
 			poster_path  string
-			vote_average float64
 		)
 
-		rows.Scan(&id, &title, &release_date, &poster_path, &vote_average)
-		fmt.Fprintf(w, "%5d | %s | %s | %s | %f  \n", id, title, release_date, poster_path, vote_average)
+		rows.Scan(&id, &title, &release_date, &poster_path)
+		fmt.Fprintf(w, "%5d | %s | %s | %s  \n", id, title, release_date, poster_path)
 	}
 	rows, err = db.Query("SELECT id, seats,movie FROM halls")
 	if err != nil {
@@ -138,21 +137,16 @@ func insertMovies(movies *moviesReponse) {
 }
 
 func removeUnavialabeMoviesFromCinema(movies *moviesReponse) {
-	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,isAvialabe FROM movies")
+	rows, err := db.Query("SELECT id FROM movies")
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var (
-			id           int64
-			title        string
-			release_date string
-			poster_path  string
-			vote_average float64
-			isAvialabe   bool
+			id int64
 		)
-		rows.Scan(&id, &title, &release_date, &poster_path, &vote_average, &isAvialabe)
+		rows.Scan(&id)
 		var isFound bool
 		for movieIndex := range movies.Results {
 			if movies.Results[movieIndex].Id == id {
