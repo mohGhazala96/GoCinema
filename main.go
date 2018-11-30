@@ -160,6 +160,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//JUST FOR NOW
+	refreshDatabase()
+
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
 	log.Print("Listening on " + ":" + webPort + "...")
