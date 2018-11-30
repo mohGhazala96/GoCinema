@@ -63,7 +63,7 @@ type moviesReponse struct {
 var db *sql.DB
 
 func myHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title FROM movies")
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average FROM movies")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -74,13 +74,15 @@ func myHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "---+--------")
 	for rows.Next() {
 		var (
-			id    int
-			title string
+			id           int
+			title        string
+			release_date string
+			poster_path  string
+			vote_average float64
 		)
 
-		rows.Scan(&id, &title)
-
-		fmt.Fprintf(w, "%2d | %s\n", id, title)
+		rows.Scan(&id, &title, &release_date, &poster_path, &vote_average)
+		fmt.Fprintf(w, "%5d | %s | %s | %s | %f  \n", id, title, release_date, poster_path, vote_average)
 	}
 }
 func getJson(url string, target interface{}) error {
@@ -122,17 +124,6 @@ func addMoviesToDatabase() {
 
 func main() {
 	var err error
-
-	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
-
-	movies := new(moviesReponse)
-	getJson(url, movies)
-	fmt.Println(movies.Results[0].Id)
-	fmt.Println(movies.Results[0].Original_language)
-	//http://image.tmdb.org/t/p/w500/
-	fmt.Println(movies.Results[1].Poster_path)
-	fmt.Println(movies.Results[0].Title)
-
 	config := Configuration{}
 	config.Dbname = os.Getenv("DATABASE_NAME")
 	config.Host = os.Getenv("DATABASE_HOST")
@@ -150,6 +141,26 @@ func main() {
 		panic(err)
 	}
 	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
+
+	movies := new(moviesReponse)
+	getJson(url, movies)
+
+	fmt.Println(movies.Results[0].Title)
+	fmt.Println(movies.Results[0].Release_date)
+	fmt.Println(movies.Results[0].Poster_path)
+	fmt.Println(movies.Results[0].Vote_average)
+	var sqlStatement string
+	sqlStatement = "INSERT INTO movies (title, release_date, poster_path, vote_average) VALUES ($1,$2,$3,$4)"
+	//put this in aloop
+	_, err = db.Exec(sqlStatement, movies.Results[0].Title,
+		movies.Results[0].Release_date,
+		"http://image.tmdb.org/t/p/w500/"+movies.Results[0].Poster_path,
+		movies.Results[0].Vote_average)
 	if err != nil {
 		panic(err)
 	}

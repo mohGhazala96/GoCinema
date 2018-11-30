@@ -4,10 +4,10 @@
 -- DROP TABLE movies;
 CREATE TABLE IF NOT EXISTS movies(
     id Serial PRIMARY KEY,
-    title VARCHAR NOT NULL UNIQUE
-    Release_date VARCHAR,
-    Poster_path VARCHAR,
-    Vote_average FLOAT
+    title TEXT NOT NULL UNIQUE,
+    release_date TEXT,
+    poster_path TEXT,
+    vote_average FLOAT
 );
 
 CREATE TABLE IF NOT EXISTS timings(
@@ -50,9 +50,3 @@ CREATE TABLE IF NOT EXISTS reservations(
     FOREIGN KEY (timing) REFERENCES timings(movie_period)
 
 );
-
-
-
-
-Insert INTO movies("title") VALUES 
-('venom');
