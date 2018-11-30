@@ -59,7 +59,6 @@ type moviesReponse struct {
 }
 
 //
-
 var db *sql.DB
 
 func myHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +103,7 @@ func getJson(url string, target interface{}) error {
 	defer res.Body.Close()
 	return json.NewDecoder(res.Body).Decode(target)
 }
+
 func refreshDatabase() {
 	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
 	movies := new(moviesReponse)
@@ -111,10 +111,9 @@ func refreshDatabase() {
 
 	for movieIndex := range movies.Results {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO movies (title, release_date, poster_path, vote_average) VALUES ($1,$2,$3,$4)"
-		//put this in aloop
+		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average where not exists (select * from movies where id=$1))"
 		var err error
-		_, err = db.Exec(sqlStatement, movies.Results[movieIndex].Title,
+		_, err = db.Exec(sqlStatement, movies.Results[movieIndex].Id, movies.Results[movieIndex].Title,
 			movies.Results[movieIndex].Release_date,
 			"http://image.tmdb.org/t/p/w500/"+movies.Results[movieIndex].Poster_path,
 			movies.Results[movieIndex].Vote_average)
@@ -123,7 +122,11 @@ func refreshDatabase() {
 		}
 	}
 }
+
+// loop on current db
+
 func addMoviesToDatabase() {
+	fmt.Println("adding movies to db")
 	currentTime := time.Now()
 	newDay := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location())
 	difference := newDay.Sub(currentTime)
@@ -160,12 +163,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//JUST FOR NOW
-	refreshDatabase()
-
+	go addMoviesToDatabase()
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
 	log.Print("Listening on " + ":" + webPort + "...")
 	http.ListenAndServe(":"+webPort, nil)
-
 }
