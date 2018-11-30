@@ -105,7 +105,23 @@ func getJson(url string, target interface{}) error {
 	return json.NewDecoder(res.Body).Decode(target)
 }
 func refreshDatabase() {
+	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
+	movies := new(moviesReponse)
+	getJson(url, movies)
 
+	for movieIndex := range movies.Results {
+		var sqlStatement string
+		sqlStatement = "INSERT INTO movies (title, release_date, poster_path, vote_average) VALUES ($1,$2,$3,$4)"
+		//put this in aloop
+		var err error
+		_, err = db.Exec(sqlStatement, movies.Results[movieIndex].Title,
+			movies.Results[movieIndex].Release_date,
+			"http://image.tmdb.org/t/p/w500/"+movies.Results[movieIndex].Poster_path,
+			movies.Results[movieIndex].Vote_average)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 func addMoviesToDatabase() {
 	currentTime := time.Now()
@@ -144,27 +160,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
-
-	movies := new(moviesReponse)
-	getJson(url, movies)
-
-	fmt.Println(movies.Results[0].Title)
-	fmt.Println(movies.Results[0].Release_date)
-	fmt.Println(movies.Results[0].Poster_path)
-	fmt.Println(movies.Results[0].Vote_average)
-	var sqlStatement string
-	sqlStatement = "INSERT INTO movies (title, release_date, poster_path, vote_average) VALUES ($1,$2,$3,$4)"
-	//put this in aloop
-	_, err = db.Exec(sqlStatement, movies.Results[0].Title,
-		movies.Results[0].Release_date,
-		"http://image.tmdb.org/t/p/w500/"+movies.Results[0].Poster_path,
-		movies.Results[0].Vote_average)
-	if err != nil {
-		panic(err)
-	}
-
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
 	log.Print("Listening on " + ":" + webPort + "...")
