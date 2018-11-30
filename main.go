@@ -104,31 +104,91 @@ func getJson(url string, target interface{}) error {
 	return json.NewDecoder(res.Body).Decode(target)
 }
 
-func refreshDatabase() {
+func updateMovies() {
 	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
 	movies := new(moviesReponse)
 	getJson(url, movies)
 
 	for movieIndex := range movies.Results {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average where not exists (select * from movies where id=$1))"
+		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as isAvialabe where not exists (select * from movies where id=$1))"
 		var err error
 		_, err = db.Exec(sqlStatement, movies.Results[movieIndex].Id, movies.Results[movieIndex].Title,
 			movies.Results[movieIndex].Release_date,
 			"http://image.tmdb.org/t/p/w500/"+movies.Results[movieIndex].Poster_path,
-			movies.Results[movieIndex].Vote_average)
+			movies.Results[movieIndex].Vote_average, true)
 		if err != nil {
 			panic(err)
 		}
 	}
+	removeUnavialabeMoviesFromCinema(movies)
+	updateHalls(movies)
 }
 
-// loop on current db
+func removeUnavialabeMoviesFromCinema(movies *moviesReponse) {
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,isAvialabe FROM movies")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			id           int64
+			title        string
+			release_date string
+			poster_path  string
+			vote_average float64
+			isAvialabe   bool
+		)
+		rows.Scan(&id, &title, &release_date, &poster_path, &vote_average, &isAvialabe)
+		var isFound bool
+		for movieIndex := range movies.Results {
+			if movies.Results[movieIndex].Id == id {
+				isFound = true
+			}
+		}
+		if !isFound {
+			//update here
+			var sqlStatement string
+			sqlStatement = "UPDATE movies SET isAvialabe = $2 WHERE id = $1;"
+			var err error
+			_, err = db.Exec(sqlStatement, id, false)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+}
 
-func addMoviesToDatabase() {
-	fmt.Println("adding movies to db")
+func updateHalls(movies *moviesReponse) {
+	rows, err := db.Query("SELECT id,movie FROM halls")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	var movieIndex int = 0
+	for rows.Next() {
+		var (
+			id int64
+		)
+		rows.Scan(&id)
+
+		var sqlStatement string
+		sqlStatement = "UPDATE halls SET movie = $2 WHERE id = $1;"
+		var err error
+		_, err = db.Exec(sqlStatement, id, movies.Results[movieIndex].Id)
+		if err != nil {
+			panic(err)
+		}
+		movieIndex++
+
+	}
+}
+
+func updateCinema() {
+	fmt.Println("Updating Cinema")
 	currentTime := time.Now()
-	newDay := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 0, 0, 0, 0, currentTime.Location())
+	newDay := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day()+6, 0, 0, 0, 0, currentTime.Location())
 	difference := newDay.Sub(currentTime)
 	if difference < 0 {
 		newDay = newDay.Add(24 * time.Hour)
@@ -137,7 +197,8 @@ func addMoviesToDatabase() {
 	for {
 		time.Sleep(difference)
 		difference = 24 * time.Hour
-		refreshDatabase()
+		updateMovies() // updates movies and halls
+
 	}
 }
 
@@ -163,7 +224,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	go addMoviesToDatabase()
+	go updateCinema()
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)
 	log.Print("Listening on " + ":" + webPort + "...")
