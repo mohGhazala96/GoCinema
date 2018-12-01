@@ -290,12 +290,69 @@ func insertHalls(movies *moviesReponse) {
 	}
 }
 
+func insertTimings(){
+
+	sqlQuery := "INSERT INTO timings (movie_period, movie_id) VALUES($1, $2)"
+	var err error
+	_, err = db.Exec(sqlQuery, "Afternoon", 338952)
+	if err != nil{
+		panic(err) 
+	}
+}
+
+func insertReservations() {
+
+	sqlQuery := "INSERT INTO reservations (hall, seat, movie, useremail, timing) values($1, $2, $3, $4, $5)"
+	var err error
+		_, err = db.Exec(sqlQuery, 1, "A1", 338952, "farid@guc.com", 1)
+		if err != nil {
+			panic(err)
+		}
+	
+	
+	//var err error
+		_, err = db.Exec(sqlQuery, 1, "A2", 338952, "farid@guc.com", 1)
+		if err != nil {
+			panic(err)
+		}
+	
+	
+	//var err error
+		_, err = db.Exec(sqlQuery, 1, "A3", 338952, "farid@guc.com", 1)
+		if err != nil {
+			panic(err)
+		}
+	
+}
+
 func initCinema() {
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies)
 	insertHalls(movies)
 }
+
+//REVIEW
+func checkReservedSeats(w http.ResponseWriter, r *http.Request){ 
+	
+	sqlQuery := "SELECT seat FROM reservations WHERE hall = $1"
+
+	var err error 
+	seats, err := db.Query(sqlQuery, 1)
+	if err != nil {
+		panic(err) 
+	}
+	
+	var seat string
+	result := "Reserved Seats: "
+	for seats.Next() {
+		seats.Scan(&seat)
+		result += seat + " "
+	}
+	fmt.Fprintln(w, result)
+	fmt.Fprintln(w, " ")
+	fmt.Fprintln(w, "Done")
+} 
 
 func main() {
 	var err error
@@ -321,11 +378,17 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	initCinema()
+	//initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
+
+	//only once
+	//insertTimings()
+	//insertReservations()
+
 	http.HandleFunc("/api/getMovies/", moviesHandler)
 	http.HandleFunc("/api/getHalls/", hallsHandler)
+	http.HandleFunc("/checkSeats", checkReservedSeats)
 
 	log.Print("Listening on " + ":" + webPort + "...")
 	http.ListenAndServe(":"+webPort, nil)
