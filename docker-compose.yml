@@ -31,8 +31,7 @@ services:
   angular-app:
     build: ./frontend
     volumes:
-      - './frontend:/usr/src/app'
-      - './frontend/node_modules:/usr/src/app/node_modules'
+      - ./frontend:/usr/src/app
     ports:
       - 4200:4200
     
