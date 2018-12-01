@@ -3,11 +3,12 @@
 -- DROP TABLE timings;
 -- DROP TABLE movies;
 CREATE TABLE IF NOT EXISTS movies(
-    id Serial PRIMARY KEY,
-    title TEXT NOT NULL UNIQUE,
+    id int PRIMARY KEY,
+    title TEXT NOT NULL ,
     release_date TEXT,
     poster_path TEXT,
-    vote_average FLOAT
+    vote_average FLOAT,
+    isAvialabe Boolean
 );
 
 CREATE TABLE IF NOT EXISTS timings(
@@ -35,8 +36,6 @@ CREATE TABLE IF NOT EXISTS seats(
     FOREIGN KEY (movie_period) REFERENCES timings(movie_period)
 
 );
-
-
 
 CREATE TABLE IF NOT EXISTS reservations(
     id Serial PRIMARY KEY,
