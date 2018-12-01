@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS movies(
 );
 
 CREATE TABLE IF NOT EXISTS timings(
-    id Serial PRIMARY KEY,
-    movie_period timestamp UNIQUE,
+    id  Serial PRIMARY Key  ,
+    movie_period VARCHAR UNIQUE,
     movie_id integer,
-    FOREIGN KEY (movie_id) REFERENCES movies(id)
+    FOREIGN KEY (movie_id) REFERENCES movies(id),
 );
 
 CREATE TABLE IF NOT EXISTS halls (
@@ -26,27 +26,15 @@ CREATE TABLE IF NOT EXISTS halls (
     FOREIGN KEY (movie) REFERENCES movies(id) ON DELETE CASCADE
 );
 
-
-CREATE TABLE IF NOT EXISTS seats(
-    seat_status boolean,
-    seat_title VARCHAR,
-    hall NUMERIC,
-    movie_period timestamp,
-    PRIMARY KEY(hall,seat_title,movie_period),
-    FOREIGN KEY (hall) REFERENCES halls(id),
-    FOREIGN KEY (movie_period) REFERENCES timings(movie_period)
-
-);
-
 CREATE TABLE IF NOT EXISTS reservations(
     id Serial PRIMARY KEY,
     hall integer,
     seat VARCHAR,
     movie integer,
     useremail varchar,
-    timing timestamp NOT NULL UNIQUE,
+    timing integer,
     FOREIGN KEY (hall) REFERENCES halls(id),
-    FOREIGN KEY (movie) REFERENCES movies(id),
-    FOREIGN KEY (timing) REFERENCES timings(movie_period)
+    FOREIGN KEY (movie) REFERENCES movies(id)
+    -- FOREIGN KEY (timing) REFERENCES timings(id)
 
 );
