@@ -137,7 +137,7 @@ func queryhalls(halls *HallsList) error {
 func moviesHandler(w http.ResponseWriter, r *http.Request) {
 	movies := MoviesList{}
 	err := querymovies(&movies)
-	fmt.Println(movies)
+	// fmt.Println(movies)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -155,7 +155,7 @@ func moviesHandler(w http.ResponseWriter, r *http.Request) {
 func hallsHandler(w http.ResponseWriter, r *http.Request) {
 	halls := HallsList{}
 	err := queryhalls(&halls)
-	fmt.Println(halls)
+	// fmt.Println(halls)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
