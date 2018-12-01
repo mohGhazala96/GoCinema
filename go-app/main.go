@@ -161,7 +161,7 @@ func main() {
 		panic(err)
 	}
 	//JUST FOR NOW
-	refreshDatabase()
+	// refreshDatabase()
 
 	http.HandleFunc("/", myHandler)
 	//http.HandleFunc("/cache", myCachedHandler)

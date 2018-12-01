@@ -2,7 +2,7 @@
 version: "2.1"
 services:
   app:
-    build: .
+    build: ./go-app
     environment:
       DATABASE_NAME: mycinema
       DATABASE_HOST: db
@@ -27,4 +27,12 @@ services:
       POSTGRES_DB: mycinema
     ports:
       - 5432:5432
+
+  angular-app:
+    build: ./frontend
+    volumes:
+      - './frontend:/usr/src/app'
+      - './frontend/node_modules:/usr/src/app/node_modules'
+    ports:
+      - 4200:4200
     
