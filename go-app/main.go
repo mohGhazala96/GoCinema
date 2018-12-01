@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 type Configuration struct {
@@ -312,6 +312,16 @@ func main() {
 
 	router := mux.NewRouter()
 
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:4200"},
+	})
+
+	handler := c.Handler(router)
+
+	srv := &http.Server{
+		Handler: handler,
+		Addr:    ":" + webPort,
+	}
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
@@ -333,6 +343,6 @@ func main() {
 	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
 
 	log.Print("Listening on " + ":" + webPort + "...")
-	log.Fatal(http.ListenAndServe(":"+webPort, handlers.CORS()(router)))
+	log.Fatal(srv.ListenAndServe())
 
 }

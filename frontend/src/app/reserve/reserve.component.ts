@@ -25,7 +25,7 @@ export class ReserveComponent implements OnInit {
       headers:
           {
               'Content-Type': 'application/json',
-              'Access-Control-Allow-Credentials': 'true'
+              // 'Access-Control-Allow-Credentials': 'true'
           }
   }
     this.httpClient.get('localhost:3000/api/getMovies/',config).subscribe(

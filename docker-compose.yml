@@ -10,10 +10,10 @@ services:
       DATABASE_PASSWORD: secret
       DATABASE_PORT: 5432
       WEB_HOST: 
-      WEB_PORT: 8080
+      WEB_PORT: 3000
       API_Key: b57cadb923f1f664952c11dbb225bb18
     ports:
-      - 3000:8080
+      - 3000:3000
     depends_on:
       db:
         condition: service_healthy
