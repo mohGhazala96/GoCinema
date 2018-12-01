@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS movies(
     release_date TEXT,
     poster_path TEXT,
     vote_average FLOAT,
+    overview Text,
     isAvialabe Boolean
 );
 
