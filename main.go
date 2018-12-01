@@ -23,6 +23,7 @@ type Configuration struct {
 }
 
 var config Configuration
+var url string
 
 type User struct {
 	id       int
@@ -192,7 +193,6 @@ func updateHalls(movies *moviesReponse) {
 }
 
 func updateCinema() {
-	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies) //inserting new movies
@@ -228,8 +228,8 @@ func insertHalls(movies *moviesReponse) {
 		}
 	}
 }
+
 func initCinema() {
-	url := "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=b57cadb923f1f664952c11dbb225bb18"
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies)
@@ -249,6 +249,7 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
+	url = "https://api.themoviedb.org/3/movie/now_playing?page=1&language=en-US&api_key=" + os.Getenv("API_Key")
 
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
