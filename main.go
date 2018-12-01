@@ -31,6 +31,20 @@ type User struct {
 }
 
 //structs for movies
+type MoviesList struct {
+	Movies []Movies
+}
+
+type HallsList struct {
+	Halls []Halls
+}
+
+type Halls struct {
+	Id    int
+	Seats int
+	Movie int
+}
+
 type Movies struct {
 	Vote_count        int64
 	Id                int64
@@ -62,47 +76,100 @@ type moviesReponse struct {
 //
 var db *sql.DB
 
-func myHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title,release_date,poster_path FROM movies")
+func querymovies(movies *MoviesList) error {
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average FROM movies")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+
 	defer rows.Close()
-
-	fmt.Fprintln(w, "ID | Title")
-	fmt.Fprintln(w, "---+--------")
 	for rows.Next() {
-		var (
-			id           int
-			title        string
-			release_date string
-			poster_path  string
-		)
+		movie := Movies{}
+		err = rows.Scan(
+			&movie.Id,
+			&movie.Title,
+			&movie.Release_date,
+			&movie.Poster_path,
+			&movie.Vote_average)
 
-		rows.Scan(&id, &title, &release_date, &poster_path)
-		fmt.Fprintf(w, "%5d | %s | %s | %s  \n", id, title, release_date, poster_path)
+		if err != nil {
+			return err
+		}
+
+		movies.Movies = append(movies.Movies, movie)
 	}
-	rows, err = db.Query("SELECT id, seats,movie FROM halls")
+
+	err = rows.Err()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
-	defer rows.Close()
-
-	fmt.Fprintln(w, "ID | seats")
-	fmt.Fprintln(w, "---+--------")
-	for rows.Next() {
-		var (
-			id    int64
-			seats int
-			movie int64
-		)
-
-		rows.Scan(&id, &seats, &movie)
-		fmt.Fprintf(w, "%3d | %d | %d  \n", id, seats, movie)
-	}
+	return nil
 }
+
+func queryhalls(halls *HallsList) error {
+	rows, err := db.Query("SELECT id, seats,movie FROM halls")
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		hall := Halls{}
+		err = rows.Scan(
+			&hall.Id,
+			&hall.Seats,
+			&hall.Movie)
+
+		if err != nil {
+			return err
+		}
+
+		halls.Halls = append(halls.Halls, hall)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func moviesHandler(w http.ResponseWriter, r *http.Request) {
+	movies := MoviesList{}
+	err := querymovies(&movies)
+	fmt.Println(movies)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(movies)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	fmt.Fprintf(w, string(out))
+}
+
+func hallsHandler(w http.ResponseWriter, r *http.Request) {
+	halls := HallsList{}
+	err := queryhalls(&halls)
+	fmt.Println(halls)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(halls)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	fmt.Fprintf(w, string(out))
+}
+
 func getJson(url string, target interface{}) error {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -263,8 +330,9 @@ func main() {
 	initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
-	http.HandleFunc("/", myHandler)
-	//http.HandleFunc("/cache", myCachedHandler)
+	http.HandleFunc("/api/getMovies/", moviesHandler)
+	http.HandleFunc("/api/getHalls/", hallsHandler)
+
 	log.Print("Listening on " + ":" + webPort + "...")
 	http.ListenAndServe(":"+webPort, nil)
 }
