@@ -46,20 +46,13 @@ type Halls struct {
 }
 
 type Movies struct {
-	Vote_count        int64
-	Id                int64
-	Video             bool
-	Vote_average      float64
-	Title             string
-	Popularity        float64
-	Poster_path       string
-	Original_language string
-	Original_title    string
-	Genre_ids         []int64
-	Backdrop_path     string
-	Adult             bool
-	Overview          string
-	Release_date      string
+	Id             int64
+	Vote_average   float64
+	Title          string
+	Poster_path    string
+	Original_title string
+	Overview       string
+	Release_date   string
 }
 type Dates struct {
 	Maximum string
@@ -77,7 +70,7 @@ type moviesReponse struct {
 var db *sql.DB
 
 func querymovies(movies *MoviesList) error {
-	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average FROM movies")
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,overview FROM movies")
 	if err != nil {
 		return err
 	}
@@ -90,7 +83,8 @@ func querymovies(movies *MoviesList) error {
 			&movie.Title,
 			&movie.Release_date,
 			&movie.Poster_path,
-			&movie.Vote_average)
+			&movie.Vote_average,
+			&movie.Overview)
 
 		if err != nil {
 			return err
@@ -192,12 +186,12 @@ func getJson(url string, target interface{}) error {
 func insertMovies(movies *moviesReponse) {
 	for movieIndex := range movies.Results {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as isAvialabe where not exists (select * from movies where id=$1))"
+		sqlStatement = "INSERT INTO movies (id,title, release_date, poster_path, vote_average,overview,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as overview,$7 as isAvialabe where not exists (select * from movies where id=$1))"
 		var err error
 		_, err = db.Exec(sqlStatement, movies.Results[movieIndex].Id, movies.Results[movieIndex].Title,
 			movies.Results[movieIndex].Release_date,
 			"http://image.tmdb.org/t/p/w500/"+movies.Results[movieIndex].Poster_path,
-			movies.Results[movieIndex].Vote_average, true)
+			movies.Results[movieIndex].Vote_average, movies.Results[movieIndex].Overview, true)
 		if err != nil {
 			panic(err)
 		}
