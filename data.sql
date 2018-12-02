@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS reservations(
     seat VARCHAR,
     movie integer,
     useremail varchar,
-    day timestamp,
+    day VARCHAR,
     timing integer,
     FOREIGN KEY (hall) REFERENCES halls(id),
     FOREIGN KEY (movie) REFERENCES movies(id)

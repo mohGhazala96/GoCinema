@@ -54,7 +54,7 @@ type Reservation struct {
 	Seats     []string
 	Movie     int
 	Useremail string
-	Day       time.Time
+	Day       string
 	Timing    int
 }
 
@@ -65,6 +65,7 @@ type Movies struct {
 	Poster_path  string
 	Overview     string
 	Release_date string
+	Hall_Id      int64
 }
 type Dates struct {
 	Maximum string
@@ -198,18 +199,19 @@ func insertReservationHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Reservation Hall is %v + Movie is %v \n", reservation.Hall, reservation.Movie)
 
-	// InsertReservationInDb(reservation) //Create account
+	InsertReservationInDb(reservation) //Create account
 	Respond(w, Message(false, "inserted succesfully"))
 }
 
 /// END HANDLERS
 
 func InsertReservationInDb(reservation *Reservation) {
+	log.Printf("Seats %v", reservation.Seats)
 	for seat := range reservation.Seats {
 		var sqlStatement string
 		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,day,timing) Values($1,$2,$3,$4,$5,$6)"
 		var err error
-		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
+		_, err = db.Exec(sqlStatement, reservation.Hall, reservation.Seats[seat], reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
 		if err != nil {
 			panic(err)
 		}
@@ -312,7 +314,7 @@ func querymovie(movies *MoviesList, movieId string) error {
 		// handle error
 	}
 
-	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,overview FROM movies where id=$1", convertedMovieId)
+	rows, err := db.Query("SELECT movies.id, movies.title,movies.release_date,movies.poster_path,movies.vote_average,movies.overview,halls.id FROM movies INNER JOIN halls ON movies.id = halls.movie where movies.id=$1", convertedMovieId)
 	if err != nil {
 		panic(err)
 	}
@@ -326,7 +328,8 @@ func querymovie(movies *MoviesList, movieId string) error {
 			&movie.Release_date,
 			&movie.Poster_path,
 			&movie.Vote_average,
-			&movie.Overview)
+			&movie.Overview,
+			&movie.Hall_Id)
 
 		if err != nil {
 			return err
@@ -342,7 +345,7 @@ func querymovie(movies *MoviesList, movieId string) error {
 	return nil
 }
 
-func getMovie(w http.ResponseWriter, r *http.Request) {
+func getMovieHandler(w http.ResponseWriter, r *http.Request) {
 	keys, ok := r.URL.Query()["movie_id"]
 	if !ok {
 		fmt.Println("error in params")
@@ -432,24 +435,52 @@ func initCinema() {
 	insertHalls(movies)
 }
 
-func checkReservedSeats(movieId int, timing int) []string{ 
-	
-	sqlQuery := "SELECT seat FROM reservations WHERE movie = $1 AND timing = $2 "
+func getAllReservationsHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT * FROM reservations")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-	var err error 
-	seats, err := db.Query(sqlQuery, movieId, timing)
+	fmt.Fprintln(w, "ID | Name")
+	fmt.Fprintln(w, "---+--------")
+	for rows.Next() {
+		var (
+			id        int
+			hall      int
+			seat      string
+			movie     int
+			useremail string
+			day       string
+			timing    int
+		)
+
+		rows.Scan(&id, &hall, &seat, &movie, &useremail, &day, &timing)
+
+		fmt.Fprintf(w, "%d | %d | %s | %d | %s | %s | %d ", id, hall, seat, movie, useremail, day, timing)
+	}
+
+}
+
+func checkReservedSeats(movieId int, timing int, day string) []string {
+
+	sqlQuery := "SELECT seat FROM reservations WHERE movie = $1 AND timing = $2 AND day=$3"
+
+	var err error
+	seats, err := db.Query(sqlQuery, movieId, timing, day)
 	if err != nil {
 		panic(err)
 	}
 
 	var seat string
-	var seatsArray []string 
+	var seatsArray []string
 	for seats.Next() {
 		seats.Scan(&seat)
 		seatsArray = append(seatsArray, seat)
 	}
 	return seatsArray
-} 
+}
 
 func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -458,13 +489,15 @@ func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
-	
+
 	timing, err := strconv.Atoi(keys.Get("timing"))
 	if err != nil {
-		http.Error(w, err.Error(), 500) 
+		http.Error(w, err.Error(), 500)
 	}
+	fmt.Println(keys.Get("day"))
+	dayReceived := keys.Get("day")
 
-	seats := checkReservedSeats(movieId, timing)
+	seats := checkReservedSeats(movieId, timing, dayReceived)
 
 	response, err := json.Marshal(seats)
 	if err != nil {
@@ -473,7 +506,6 @@ func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, string(response))
 }
-
 
 func main() {
 	var err error
@@ -517,8 +549,9 @@ func main() {
 	router.HandleFunc("/api/getMovies", moviesHandler).Methods("GET")
 	router.HandleFunc("/api/getHalls", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insertReservation", insertReservationHandler).Methods("POST")
-	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
+	router.HandleFunc("/api/getMovie", getMovieHandler).Methods("GET")
 	router.HandleFunc("/api/checkSeats", checkReservedSeatsHandler).Methods("GET")
+	router.HandleFunc("/api/getAllReservations", getAllReservationsHandler).Methods("GET")
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())
 
