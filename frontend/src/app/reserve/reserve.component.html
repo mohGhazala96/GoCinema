@@ -1,8 +1,14 @@
+<div>
+  <img src="{{currentMovie.Poster_path}}"><br />
+  <h1>You are reserving: {{currentMovie.Title}}</h1>
+  Rating: {{currentMovie.Vote_average}}<br />
+  {{currentMovie.Overview}}<br />
+  {{currentMovie.Release_date}}
+</div>
+
 <p>
-  reserve works! {{date}} <br />
-  {{title}} <br />
   <span *ngFor="let seat of reservedSeats">{{seat}} </span>
-  </p>
+</p>
 
   <table>
   <tr *ngFor="let outerItem of seatsLayout; let i = index;">

@@ -17,6 +17,14 @@ export class ReserveComponent implements OnInit {
   reservedSeats = []
   rowLetters = ['A','B','C','D','E','F','G','H','I','J']
 
+  currentMovie = {
+    Title: "",
+    Overview: "",
+    Poster_path: "",
+    Release_date: "",
+    Vote_average: 0.0
+  }
+
 
   newReservation = []
 
@@ -37,9 +45,8 @@ export class ReserveComponent implements OnInit {
     this.activatedRoute.queryParams.subscribe(params => {
           this.movie_id = params['movie_id'];
           console.log(this.movie_id); // Print the parameter to the console. 
-          // this.getMovie(this.movie_id);
-          // this.sendPing(this.movie_id);
-          // this.testInsert(this.movie_id);
+          this.getMovie(this.movie_id);
+
       });
   }
 
@@ -51,14 +58,22 @@ export class ReserveComponent implements OnInit {
               // 'Access-Control-Allow-Credentials': 'true'
           }
   }
-    this.httpClient.get('http://localhost:3000/api/getMovies/',config).subscribe(
+    this.httpClient.get('http://localhost:3000/api/getMovie?movie_id='+ID,config).subscribe(
       res => {
-        this.title = res['Movies'][0]['Title'];
-        console.log(res['Movies'])
+        console.log(res)
+        var movie = res['Movies'][0];
+        this.currentMovie.Title = movie.Title;
+        this.currentMovie.Overview = movie.Overview;
+        this.currentMovie.Release_date = movie.Release_date;
+        this.currentMovie.Poster_path = movie.Poster_path;
+        this.currentMovie.Vote_average = movie.Vote_average;
+
       }
     );
       
   }
+
+  // getReservations(ID: string,)
 
   pressButton(outer: number, inner: number){
     if(this.reservedSeats.includes(this.rowLetters[outer]+""+inner)){
