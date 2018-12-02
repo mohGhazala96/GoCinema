@@ -198,7 +198,7 @@ func InsertReservation(w http.ResponseWriter, r *http.Request) {
 func InsertReservationInDb(reservation *Reservations) {
 	for seat := range reservation.Seats {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO reservations (id,title, release_date, poster_path, vote_average,overview,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as overview,$7 as isAvialabe where not exists (select * from movies where id=$1))"
+		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,timing) Values($1,$2,$3,$4,$5)"
 		var err error
 		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Timing)
 		if err != nil {
