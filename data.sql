@@ -1,7 +1,3 @@
--- DROP TABLE reservations;
--- DROP TABLE halls;
--- DROP TABLE timings;
--- DROP TABLE movies;
 CREATE TABLE IF NOT EXISTS movies(
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL ,
@@ -12,12 +8,6 @@ CREATE TABLE IF NOT EXISTS movies(
     isAvialabe Boolean
 );
 
-CREATE TABLE IF NOT EXISTS timings(
-    id  Serial PRIMARY Key  ,
-    movie_period VARCHAR UNIQUE,
-    movie_id integer,
-    FOREIGN KEY (movie_id) REFERENCES movies(id),
-);
 
 CREATE TABLE IF NOT EXISTS halls (
     id NUMERIC PRIMARY KEY,
@@ -32,10 +22,9 @@ CREATE TABLE IF NOT EXISTS reservations(
     seat VARCHAR,
     movie integer,
     useremail varchar,
-    day DATE,
+    day timestamp,
     timing integer,
     FOREIGN KEY (hall) REFERENCES halls(id),
     FOREIGN KEY (movie) REFERENCES movies(id)
-    -- FOREIGN KEY (timing) REFERENCES timings(id)
 
 );

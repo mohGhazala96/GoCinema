@@ -54,7 +54,7 @@ type Reservations struct {
 	Seats     []string
 	Movie     int
 	Useremail string
-	Day       time
+	Day       time.Time
 	Timing    int
 }
 
@@ -394,23 +394,6 @@ func insertHalls(movies *moviesReponse) {
 	}
 }
 
-func insertTimings() {
-	var sqlStatement string
-	sqlStatement = "IF OBJECT_ID('dbo.Scores', 'U') IS NOT NULL DROP TABLE dbo.Scores; "
-
-	for movieCount := 0; movieCount < 20; movieCount++ {
-		sqlStatement = "INSERT INTO timings (seats,movie) Values($1,$2)"
-		var err error
-		_, err = db.Exec(sqlStatement, "1:00 PM", movies.Results[movieCount].Id)
-		_, err = db.Exec(sqlStatement, "4:00 PM", movies.Results[movieCount].Id)
-		_, err = db.Exec(sqlStatement, "7:00 PM", movies.Results[movieCount].Id)
-		_, err = db.Exec(sqlStatement, "10:00 PM", movies.Results[movieCount].Id)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
 func insertReservations() {
 
 	sqlQuery := "INSERT INTO reservations (hall, seat, movie, useremail, timing) values($1, $2, $3, $4, $5)"
@@ -440,7 +423,6 @@ func initCinema() {
 	getJson(url, movies)
 	insertMovies(movies)
 	insertHalls(movies)
-	insertTimings(movies)
 }
 
 //REVIEW
@@ -501,7 +483,7 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	// initCinema()
+	initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
 	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
