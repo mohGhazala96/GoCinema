@@ -1,4 +1,5 @@
 #### MAKE A SAMPLE DOCKER-COMPOSE
+### DELETE POSTGRES FOLDER
 version: "2.1"
 services:
   app:

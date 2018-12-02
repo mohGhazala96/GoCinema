@@ -48,6 +48,15 @@ type Halls struct {
 	Movie int
 }
 
+type Reservation struct {
+	Id        int
+	Hall      int
+	Seats     []string
+	Movie     int
+	Useremail string
+	Timing    int
+}
+
 type Movies struct {
 	Id             int64
 	Vote_average   float64
@@ -181,6 +190,7 @@ func addReservationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func hallsHandler(w http.ResponseWriter, r *http.Request) {
+
 	halls := HallsList{}
 	err := queryhalls(&halls)
 	// fmt.Println(halls)
@@ -196,6 +206,39 @@ func hallsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, string(out))
+}
+func Message(status bool, message string) map[string]interface{} {
+	return map[string]interface{}{"status": status, "message": message}
+}
+func Respond(w http.ResponseWriter, data map[string]interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+func InsertReservation(w http.ResponseWriter, r *http.Request) {
+	reservation := &Reservation{}
+	err := json.NewDecoder(r.Body).Decode(reservation) //decode the request body into struct and failed if any error occur
+	if err != nil {
+		Respond(w, Message(false, "Invalid request"))
+		return
+	}
+
+	log.Printf("Reservation Hall is %v + Movie is %v \n", reservation.Hall, reservation.Movie)
+
+	// InsertReservationInDb(reservation) //Create account
+	Respond(w, Message(false, "inserted succesfully"))
+}
+
+func InsertReservationInDb(reservation *Reservation) {
+	for seat := range reservation.Seats {
+		var sqlStatement string
+		sqlStatement = "INSERT INTO reservations (id,title, release_date, poster_path, vote_average,overview,isAvialabe) (select $1 as id, $2 as title ,$3 as release_date,$4 as poster_path,$5 as vote_average ,$6 as overview,$7 as isAvialabe where not exists (select * from movies where id=$1))"
+		var err error
+		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Timing)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
 
 func getJson(url string, target interface{}) error {
@@ -373,6 +416,7 @@ func main() {
 	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/addReservation/", addReservationHandler).Methods("POST")
+	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
 
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())

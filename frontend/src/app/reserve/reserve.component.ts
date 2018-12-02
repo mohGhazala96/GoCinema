@@ -18,6 +18,7 @@ export class ReserveComponent implements OnInit {
           console.log(this.movie_id); // Print the parameter to the console. 
           this.getMovie(this.movie_id);
           this.sendPing(this.movie_id);
+          this.testInsert(this.movie_id);
       });
   }
 
@@ -53,6 +54,32 @@ export class ReserveComponent implements OnInit {
                 title: "ping successful"
             });
     this.httpClient.post('http://localhost:3000/api/addReservation/',newReservation,config).subscribe(
+      res => {
+        this.test = 'TRUE';
+      }
+    );
+      
+  }
+
+  testInsert(ID: string){
+    var config = {
+      headers:
+        {
+            'Content-Type': 'application/json',
+            // 'Access-Control-Allow-Credentials': 'true'
+        }
+    }
+
+  var newReservation = JSON.stringify
+            ({
+                // userid:localStorage.getItem("user"),
+                Hall: 1,
+                Seats: ['A1','A2'],
+                Movie: 1,
+                Useremail: "hello@live.com",
+                Timing: 2
+            });
+    this.httpClient.post('http://localhost:3000/api/insert',newReservation,config).subscribe(
       res => {
         this.test = 'TRUE';
       }
