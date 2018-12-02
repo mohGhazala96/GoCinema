@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -145,6 +146,36 @@ func moviesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
+	fmt.Fprintf(w, string(out))
+}
+
+type NewReservation struct {
+	Title string `json:"title,omitempty"`
+}
+
+func addReservationHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	movies := MoviesList{}
+	err = querymovies(&movies)
+	// fmt.Println(movies)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(movies)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	params := mux.Vars(r)
+	var newReservation NewReservation
+	_ = json.NewDecoder(r.Body).Decode(&newReservation)
+	newReservation.Title = params["title"]
+	log.Printf("New Reservation full body %s\n Title %s\n Decoded is %s \n .title is %s\n Body is %s\n", r.Body, newReservation, json.NewDecoder(r.Body),
+		newReservation.Title, body)
 
 	fmt.Fprintf(w, string(out))
 }
@@ -341,6 +372,7 @@ func main() {
 	//	go weeklyUpdate()
 	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
+	router.HandleFunc("/api/addReservation/", addReservationHandler).Methods("POST")
 
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())

@@ -17,6 +17,7 @@ export class ReserveComponent implements OnInit {
           this.movie_id = params['movie_id'];
           console.log(this.movie_id); // Print the parameter to the console. 
           this.getMovie(this.movie_id);
+          this.sendPing(this.movie_id);
       });
   }
 
@@ -30,9 +31,30 @@ export class ReserveComponent implements OnInit {
   }
     this.httpClient.get('http://localhost:3000/api/getMovies/',config).subscribe(
       res => {
-        this.test = 'TRUE';
         this.title = res['Movies'][0]['Title'];
         console.log(res['Movies'])
+      }
+    );
+      
+  }
+
+  sendPing(ID: string){
+    var config = {
+      headers:
+          {
+              'Content-Type': 'application/json',
+              // 'Access-Control-Allow-Credentials': 'true'
+          }
+  }
+
+  var newReservation = JSON.stringify
+            ({
+                // userid:localStorage.getItem("user"),
+                title: "ping successful"
+            });
+    this.httpClient.post('http://localhost:3000/api/addReservation/',newReservation,config).subscribe(
+      res => {
+        this.test = 'TRUE';
       }
     );
       
