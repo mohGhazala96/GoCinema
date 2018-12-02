@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+
 
 @Component({
   selector: 'app-navbar',
@@ -7,8 +9,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NavbarComponent implements OnInit {
 
-  constructor() { }
+  constructor(  public router: Router) { }
+  navigateToAboutView(){
+        this.router.navigate(['/aboutview']);
 
+  }
+  navigateToMoviesView(){
+        this.router.navigate(['/moviesview']);
+
+
+  }
   ngOnInit() {
   }
 

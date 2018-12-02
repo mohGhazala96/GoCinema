@@ -209,7 +209,7 @@ func InsertReservationInDb(reservation *Reservation) {
 		var sqlStatement string
 		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,day,timing) Values($1,$2,$3,$4,$5,$6)"
 		var err error
-		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
+		_, err = db.Exec(sqlStatement, reservation.Hall, reservation.Seats[seat], reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
 		if err != nil {
 			panic(err)
 		}
@@ -432,24 +432,24 @@ func initCinema() {
 	insertHalls(movies)
 }
 
-func checkReservedSeats(movieId int, timing int) []string{ 
-	
+func checkReservedSeats(movieId int, timing int) []string {
+
 	sqlQuery := "SELECT seat FROM reservations WHERE movie = $1 AND timing = $2 "
 
-	var err error 
+	var err error
 	seats, err := db.Query(sqlQuery, movieId, timing)
 	if err != nil {
 		panic(err)
 	}
 
 	var seat string
-	var seatsArray []string 
+	var seatsArray []string
 	for seats.Next() {
 		seats.Scan(&seat)
 		seatsArray = append(seatsArray, seat)
 	}
 	return seatsArray
-} 
+}
 
 func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -458,10 +458,10 @@ func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
-	
+
 	timing, err := strconv.Atoi(keys.Get("timing"))
 	if err != nil {
-		http.Error(w, err.Error(), 500) 
+		http.Error(w, err.Error(), 500)
 	}
 
 	seats := checkReservedSeats(movieId, timing)
@@ -473,7 +473,6 @@ func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, string(response))
 }
-
 
 func main() {
 	var err error
