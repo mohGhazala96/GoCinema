@@ -7,6 +7,7 @@ import { Router, NavigationEnd } from '@angular/router';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
+
 export class NavbarComponent implements OnInit {
 
   constructor(  public router: Router) { }
