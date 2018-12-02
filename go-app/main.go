@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 type Configuration struct {
@@ -138,6 +140,7 @@ func queryhalls(halls *HallsList) error {
 }
 
 func moviesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	movies := MoviesList{}
 	err := querymovies(&movies)
 	// fmt.Println(movies)
@@ -348,6 +351,18 @@ func main() {
 	config.Port = os.Getenv("DATABASE_PORT")
 	var webPort = os.Getenv("WEB_PORT")
 
+	router := mux.NewRouter()
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:4200"},
+	})
+
+	handler := c.Handler(router)
+
+	srv := &http.Server{
+		Handler: handler,
+		Addr:    ":" + webPort,
+	}
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
@@ -362,12 +377,14 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	initCinema()
+	// initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
-	http.HandleFunc("/api/getMovies/", moviesHandler)
-	http.HandleFunc("/api/getHalls/", hallsHandler)
-	http.HandleFunc("/api/insert", InsertReservation).Methods("POST")
+	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
+	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
+
 	log.Print("Listening on " + ":" + webPort + "...")
-	http.ListenAndServe(":"+webPort, nil)
+	log.Fatal(srv.ListenAndServe())
+
 }
