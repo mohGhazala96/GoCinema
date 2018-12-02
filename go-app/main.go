@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,6 +54,7 @@ type Reservation struct {
 	Seats     []string
 	Movie     int
 	Useremail string
+	Day       time.Time
 	Timing    int
 }
 
@@ -206,9 +208,9 @@ func insertReservationHandler(w http.ResponseWriter, r *http.Request) {
 func InsertReservationInDb(reservation *Reservation) {
 	for seat := range reservation.Seats {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,timing) Values($1,$2,$3,$4,$5)"
+		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,day,timing) Values($1,$2,$3,$4,$5,$6)"
 		var err error
-		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Timing)
+		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
 		if err != nil {
 			panic(err)
 		}
@@ -304,7 +306,65 @@ func updateHalls(movies *moviesReponse) {
 
 	}
 }
+func querymovie(movies *MoviesList, movieId string) error {
+	var err error
+	convertedMovieId, err := strconv.Atoi(movieId)
+	if err != nil {
+		// handle error
+	}
 
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,overview FROM movies where id=$1", convertedMovieId)
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		movie := Movies{}
+		err = rows.Scan(
+			&movie.Id,
+			&movie.Title,
+			&movie.Release_date,
+			&movie.Poster_path,
+			&movie.Vote_average,
+			&movie.Overview)
+
+		if err != nil {
+			return err
+		}
+
+		movies.Movies = append(movies.Movies, movie)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getMovie(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["movie_id"]
+	if !ok {
+		fmt.Println("error in params")
+	}
+	var movieId = keys[0]
+	movie := MoviesList{}
+	err := querymovie(&movie, movieId)
+	// fmt.Println(movies)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(movie)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	fmt.Fprintf(w, string(out))
+}
 func updateCinema() {
 	movies := new(moviesReponse)
 	getJson(url, movies)
@@ -342,11 +402,57 @@ func insertHalls(movies *moviesReponse) {
 	}
 }
 
+func insertReservations() {
+
+	sqlQuery := "INSERT INTO reservations (hall, seat, movie, useremail, timing) values($1, $2, $3, $4, $5)"
+	var err error
+
+	_, err = db.Exec(sqlQuery, 1, "A1", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	//var err error
+	_, err = db.Exec(sqlQuery, 1, "A2", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	//var err error
+	_, err = db.Exec(sqlQuery, 1, "A3", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func initCinema() {
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies)
 	insertHalls(movies)
+}
+
+//REVIEW
+func checkReservedSeats(w http.ResponseWriter, r *http.Request) {
+
+	sqlQuery := "SELECT seat FROM reservations WHERE hall = $1"
+
+	var err error
+	seats, err := db.Query(sqlQuery, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	var seat string
+	result := "Reserved Seats: "
+	for seats.Next() {
+		seats.Scan(&seat)
+		result += seat + " "
+	}
+	fmt.Fprintln(w, result)
+	fmt.Fprintln(w, " ")
+	fmt.Fprintln(w, "Done")
 }
 
 func main() {
@@ -391,7 +497,8 @@ func main() {
 	router.HandleFunc("/api/getMovies", moviesHandler).Methods("GET")
 	router.HandleFunc("/api/getHalls", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insertReservation", insertReservationHandler).Methods("POST")
-
+	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
+	router.HandleFunc("/api/checkSeats", checkReservedSeats).Methods("GET")
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())
 
