@@ -48,7 +48,7 @@ type Halls struct {
 	Movie int
 }
 
-type Reservations struct {
+type Reservation struct {
 	Id        int
 	Hall      int
 	Seats     []string
@@ -59,13 +59,12 @@ type Reservations struct {
 }
 
 type Movies struct {
-	Id             int64
-	Vote_average   float64
-	Title          string
-	Poster_path    string
-	Original_title string
-	Overview       string
-	Release_date   string
+	Id           int64
+	Vote_average float64
+	Title        string
+	Poster_path  string
+	Overview     string
+	Release_date string
 }
 type Dates struct {
 	Maximum string
@@ -141,6 +140,16 @@ func queryhalls(halls *HallsList) error {
 	return nil
 }
 
+func Message(status bool, message string) map[string]interface{} {
+	return map[string]interface{}{"status": status, "message": message}
+}
+func Respond(w http.ResponseWriter, data map[string]interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+// HANDLERS
+
 func moviesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	movies := MoviesList{}
@@ -178,26 +187,24 @@ func hallsHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, string(out))
 }
-func Message(status bool, message string) map[string]interface{} {
-	return map[string]interface{}{"status": status, "message": message}
-}
-func Respond(w http.ResponseWriter, data map[string]interface{}) {
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
-func InsertReservation(w http.ResponseWriter, r *http.Request) {
-	reservation := &Reservations{}
+
+func insertReservationHandler(w http.ResponseWriter, r *http.Request) {
+	reservation := &Reservation{}
 	err := json.NewDecoder(r.Body).Decode(reservation) //decode the request body into struct and failed if any error occur
 	if err != nil {
 		Respond(w, Message(false, "Invalid request"))
 		return
 	}
 
-	InsertReservationInDb(reservation) //Create account
+	log.Printf("Reservation Hall is %v + Movie is %v \n", reservation.Hall, reservation.Movie)
+
+	// InsertReservationInDb(reservation) //Create account
 	Respond(w, Message(false, "inserted succesfully"))
 }
 
-func InsertReservationInDb(reservation *Reservations) {
+/// END HANDLERS
+
+func InsertReservationInDb(reservation *Reservation) {
 	for seat := range reservation.Seats {
 		var sqlStatement string
 		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,day,timing) Values($1,$2,$3,$4,$5,$6)"
@@ -483,12 +490,12 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	initCinema()
+	// initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
-	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
-	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
-	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
+	router.HandleFunc("/api/getMovies", moviesHandler).Methods("GET")
+	router.HandleFunc("/api/getHalls", hallsHandler).Methods("GET")
+	router.HandleFunc("/api/insertReservation", insertReservationHandler).Methods("POST")
 	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
 	router.HandleFunc("/api/checkSeats", checkReservedSeats).Methods("GET")
 	log.Print("Listening on " + ":" + webPort + "...")

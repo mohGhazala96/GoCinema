@@ -1,4 +1,15 @@
 <p>
   reserve works! {{date}} <br />
-  {{title}}
-</p>
+  {{title}} <br />
+  <span *ngFor="let seat of reservedSeats">{{seat}} </span>
+  </p>
+
+  <table>
+  <tr *ngFor="let outerItem of seatsLayout; let i = index;">
+    <td *ngFor="let innerItem of outerItem; let j = index;">
+      <!-- {{i}} {{j}} {{innerItem}} -->
+      <button *ngIf="innerItem==1 || newReservation[i][j]==1" type="button" class="btn btn-block btn-danger" [disabled]="innerItem" value="[i][j]" (click)="pressButton(i,j)">{{rowLetters[i]}}{{j}}</button>
+      <button *ngIf="innerItem==0 && newReservation[i][j]==0" type="button" class="btn btn-block btn-success" [disabled]="innerItem" value="[i][j]" (click)="pressButton(i,j)">{{rowLetters[i]}}{{j}}</button>
+    </td>
+  </tr>
+  </table>
