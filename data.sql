@@ -3,7 +3,7 @@
 -- DROP TABLE timings;
 -- DROP TABLE movies;
 CREATE TABLE IF NOT EXISTS movies(
-    id int PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title TEXT NOT NULL ,
     release_date TEXT,
     poster_path TEXT,
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS reservations(
     seat VARCHAR,
     movie integer,
     useremail varchar,
+    day DATE,
     timing integer,
     FOREIGN KEY (hall) REFERENCES halls(id),
     FOREIGN KEY (movie) REFERENCES movies(id)

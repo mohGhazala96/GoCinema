@@ -54,6 +54,7 @@ type Reservations struct {
 	Seats     []string
 	Movie     int
 	Useremail string
+	Day       time
 	Timing    int
 }
 
@@ -199,9 +200,9 @@ func InsertReservation(w http.ResponseWriter, r *http.Request) {
 func InsertReservationInDb(reservation *Reservations) {
 	for seat := range reservation.Seats {
 		var sqlStatement string
-		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,timing) Values($1,$2,$3,$4,$5)"
+		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,day,timing) Values($1,$2,$3,$4,$5,$6)"
 		var err error
-		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Timing)
+		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Day, reservation.Timing)
 		if err != nil {
 			panic(err)
 		}
@@ -393,11 +394,75 @@ func insertHalls(movies *moviesReponse) {
 	}
 }
 
+func insertTimings() {
+	var sqlStatement string
+	sqlStatement = "IF OBJECT_ID('dbo.Scores', 'U') IS NOT NULL DROP TABLE dbo.Scores; "
+
+	for movieCount := 0; movieCount < 20; movieCount++ {
+		sqlStatement = "INSERT INTO timings (seats,movie) Values($1,$2)"
+		var err error
+		_, err = db.Exec(sqlStatement, "1:00 PM", movies.Results[movieCount].Id)
+		_, err = db.Exec(sqlStatement, "4:00 PM", movies.Results[movieCount].Id)
+		_, err = db.Exec(sqlStatement, "7:00 PM", movies.Results[movieCount].Id)
+		_, err = db.Exec(sqlStatement, "10:00 PM", movies.Results[movieCount].Id)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func insertReservations() {
+
+	sqlQuery := "INSERT INTO reservations (hall, seat, movie, useremail, timing) values($1, $2, $3, $4, $5)"
+	var err error
+
+	_, err = db.Exec(sqlQuery, 1, "A1", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	//var err error
+	_, err = db.Exec(sqlQuery, 1, "A2", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	//var err error
+	_, err = db.Exec(sqlQuery, 1, "A3", 338952, "farid@guc.com", 1)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func initCinema() {
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies)
 	insertHalls(movies)
+	insertTimings(movies)
+}
+
+//REVIEW
+func checkReservedSeats(w http.ResponseWriter, r *http.Request) {
+
+	sqlQuery := "SELECT seat FROM reservations WHERE hall = $1"
+
+	var err error
+	seats, err := db.Query(sqlQuery, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	var seat string
+	result := "Reserved Seats: "
+	for seats.Next() {
+		seats.Scan(&seat)
+		result += seat + " "
+	}
+	fmt.Fprintln(w, result)
+	fmt.Fprintln(w, " ")
+	fmt.Fprintln(w, "Done")
 }
 
 func main() {
@@ -443,7 +508,7 @@ func main() {
 	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
 	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
-
+	router.HandleFunc("/api/checkSeats", checkReservedSeats).Methods("GET")
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())
 
