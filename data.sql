@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS movies(
 );
 
 CREATE TABLE IF NOT EXISTS timings(
-    id Serial PRIMARY KEY,
-    movie_period varchar UNIQUE,
+    id  Serial PRIMARY Key  ,
+    movie_period VARCHAR UNIQUE,
     movie_id integer,
-    FOREIGN KEY (movie_id) REFERENCES movies(id)
+    FOREIGN KEY (movie_id) REFERENCES movies(id),
 );
 
 CREATE TABLE IF NOT EXISTS halls (
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS reservations(
     seat VARCHAR,
     movie integer,
     useremail varchar,
-    timing int,
+    timing integer,
     FOREIGN KEY (hall) REFERENCES halls(id),
-    FOREIGN KEY (movie) REFERENCES movies(id),
-    FOREIGN KEY (timing) REFERENCES timings(id)
+    FOREIGN KEY (movie) REFERENCES movies(id)
+    -- FOREIGN KEY (timing) REFERENCES timings(id)
 
 );

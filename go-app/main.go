@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 type Configuration struct {
@@ -43,6 +45,15 @@ type Halls struct {
 	Id    int
 	Seats int
 	Movie int
+}
+
+type Reservations struct {
+	Id        int
+	Hall      int
+	Seats     []string
+	Movie     int
+	Useremail string
+	Timing    int
 }
 
 type Movies struct {
@@ -129,6 +140,7 @@ func queryhalls(halls *HallsList) error {
 }
 
 func moviesHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	movies := MoviesList{}
 	err := querymovies(&movies)
 	// fmt.Println(movies)
@@ -147,6 +159,7 @@ func moviesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func hallsHandler(w http.ResponseWriter, r *http.Request) {
+
 	halls := HallsList{}
 	err := queryhalls(&halls)
 	// fmt.Println(halls)
@@ -162,6 +175,37 @@ func hallsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, string(out))
+}
+func Message(status bool, message string) map[string]interface{} {
+	return map[string]interface{}{"status": status, "message": message}
+}
+func Respond(w http.ResponseWriter, data map[string]interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+func InsertReservation(w http.ResponseWriter, r *http.Request) {
+	reservation := &Reservations{}
+	err := json.NewDecoder(r.Body).Decode(reservation) //decode the request body into struct and failed if any error occur
+	if err != nil {
+		Respond(w, Message(false, "Invalid request"))
+		return
+	}
+
+	InsertReservationInDb(reservation) //Create account
+	Respond(w, Message(false, "inserted succesfully"))
+}
+
+func InsertReservationInDb(reservation *Reservations) {
+	for seat := range reservation.Seats {
+		var sqlStatement string
+		sqlStatement = "INSERT INTO reservations (hall, seat, movie, useremail,timing) Values($1,$2,$3,$4,$5)"
+		var err error
+		_, err = db.Exec(sqlStatement, reservation.Hall, seat, reservation.Movie, reservation.Useremail, reservation.Timing)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
 
 func getJson(url string, target interface{}) error {
@@ -364,6 +408,18 @@ func main() {
 	config.Port = os.Getenv("DATABASE_PORT")
 	var webPort = os.Getenv("WEB_PORT")
 
+	router := mux.NewRouter()
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:4200"},
+	})
+
+	handler := c.Handler(router)
+
+	srv := &http.Server{
+		Handler: handler,
+		Addr:    ":" + webPort,
+	}
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
@@ -378,18 +434,16 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	//initCinema()
+	// initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
+	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
+	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
+	router.HandleFunc("/api/checkSeats", checkReservedSeats).Methods("GET")
 
-	//only once
-	//insertTimings()
-	//insertReservations()
-
-	http.HandleFunc("/api/getMovies/", moviesHandler)
-	http.HandleFunc("/api/getHalls/", hallsHandler)
-	http.HandleFunc("/checkSeats", checkReservedSeats)
 
 	log.Print("Listening on " + ":" + webPort + "...")
-	http.ListenAndServe(":"+webPort, nil)
+	log.Fatal(srv.ListenAndServe())
+
 }
