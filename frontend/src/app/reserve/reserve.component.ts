@@ -28,10 +28,11 @@ export class ReserveComponent implements OnInit {
               // 'Access-Control-Allow-Credentials': 'true'
           }
   }
-    this.httpClient.get('localhost:3000/api/getMovies/',config).subscribe(
+    this.httpClient.get('http://localhost:3000/api/getMovies/',config).subscribe(
       res => {
         this.test = 'TRUE';
-        this.title = res['data'];
+        this.title = res['Movies'][0]['Title'];
+        console.log(res['Movies'])
       }
     );
       
