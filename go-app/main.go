@@ -59,13 +59,12 @@ type Reservation struct {
 }
 
 type Movies struct {
-	Id             int64
-	Vote_average   float64
-	Title          string
-	Poster_path    string
-	Original_title string
-	Overview       string
-	Release_date   string
+	Id           int64
+	Vote_average float64
+	Title        string
+	Poster_path  string
+	Overview     string
+	Release_date string
 }
 type Dates struct {
 	Maximum string
@@ -433,27 +432,48 @@ func initCinema() {
 	insertHalls(movies)
 }
 
-//REVIEW
-func checkReservedSeats(w http.ResponseWriter, r *http.Request) {
+func checkReservedSeats(movieId int, timing int) []string{ 
+	
+	sqlQuery := "SELECT seat FROM reservations WHERE movie = $1 AND timing = $2 "
 
-	sqlQuery := "SELECT seat FROM reservations WHERE hall = $1"
-
-	var err error
-	seats, err := db.Query(sqlQuery, 1)
+	var err error 
+	seats, err := db.Query(sqlQuery, movieId, timing)
 	if err != nil {
 		panic(err)
 	}
 
 	var seat string
-	result := "Reserved Seats: "
+	var seatsArray []string 
 	for seats.Next() {
 		seats.Scan(&seat)
-		result += seat + " "
+		seatsArray = append(seatsArray, seat)
 	}
-	fmt.Fprintln(w, result)
-	fmt.Fprintln(w, " ")
-	fmt.Fprintln(w, "Done")
+	return seatsArray
+} 
+
+func checkReservedSeatsHandler(w http.ResponseWriter, r *http.Request) {
+
+	keys := r.URL.Query()
+	movieId, err := strconv.Atoi(keys.Get("movieId"))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+	
+	timing, err := strconv.Atoi(keys.Get("timing"))
+	if err != nil {
+		http.Error(w, err.Error(), 500) 
+	}
+
+	seats := checkReservedSeats(movieId, timing)
+
+	response, err := json.Marshal(seats)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+
+	fmt.Fprintf(w, string(response))
 }
+
 
 func main() {
 	var err error
@@ -498,7 +518,7 @@ func main() {
 	router.HandleFunc("/api/getHalls", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insertReservation", insertReservationHandler).Methods("POST")
 	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
-	router.HandleFunc("/api/checkSeats", checkReservedSeats).Methods("GET")
+	router.HandleFunc("/api/checkSeats", checkReservedSeatsHandler).Methods("GET")
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())
 
