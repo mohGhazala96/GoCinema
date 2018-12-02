@@ -1,4 +1,4 @@
 <ul>
-  <li><a class="active" >Movies</a></li>
-  <li><a >About</a></li>
+  <li><a  [class.active]="router.url == '/moviesview'" class="active" (click)="navigateToMoviesView()"  >Movies</a></li>
+  <li><a [class.active]="router.url == '/aboutview'"   (click)="navigateToAboutView()" >About</a></li>
 </ul>

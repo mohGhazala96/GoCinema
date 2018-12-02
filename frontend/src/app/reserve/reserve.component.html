@@ -1,9 +1,32 @@
-<p>
-  reserve works! {{date}} <br />
-  {{title}} <br />
-  <span *ngFor="let seat of reservedSeats">{{seat}} </span>
-  </p>
+<div>
+  <img src="{{currentMovie.Poster_path}}"><br />
+  <h1>You are reserving: {{currentMovie.Title}}</h1>
+  Rating: {{currentMovie.Vote_average}}<br />
+  {{currentMovie.Overview}}<br />
+  {{currentMovie.Release_date}}
+</div>
 
+<div>
+  <div>
+    Select Date: 
+    <input type="date" name="day" (change)="selectDate($event.target.value)">
+  </div>
+  <div>
+      Select Time: 
+      <select (change)="selectTime($event.target.value)">
+          <option *ngFor="let selectedTime of availableTime" value={{selectedTime}}>
+              {{selectedTime}}
+          </option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-danger" (click)="pingSeats()">Get Available Seats</button>
+
+  </div>
+
+<p>
+  <span *ngFor="let seat of reservedSeats">{{seat}} </span>
+</p>
+<div *ngIf="showSeats">
   <table>
   <tr *ngFor="let outerItem of seatsLayout; let i = index;">
     <td *ngFor="let innerItem of outerItem; let j = index;">
@@ -13,3 +36,13 @@
     </td>
   </tr>
   </table>
+
+  <div>
+    Enter your email:
+    <input type="email" name="email" (change)="enterEmail($event.target.value)"><br />
+    <button type="button" class="btn btn-danger" (click)="reserveSeats()">Reserve Seats</button>
+
+  </div>
+  </div>
+
+  {{error}}
