@@ -429,6 +429,15 @@ func insertReservations() {
 }
 
 func initCinema() {
+	rows, err := db.Query("SELECT * FROM movies")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer rows.Close()
+	if rows.Next() {
+		return
+	}
+
 	movies := new(moviesReponse)
 	getJson(url, movies)
 	insertMovies(movies)
@@ -543,7 +552,7 @@ func main() {
 		panic(err)
 	}
 	//INTIALIZE ONLY ONCE
-	// initCinema()
+	initCinema()
 	//WEEKLY UPDATES
 	//	go weeklyUpdate()
 	router.HandleFunc("/api/getMovies", moviesHandler).Methods("GET")
