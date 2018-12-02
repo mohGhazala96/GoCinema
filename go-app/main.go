@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -296,7 +297,65 @@ func updateHalls(movies *moviesReponse) {
 
 	}
 }
+func querymovie(movies *MoviesList, movieId string) error {
+	var err error
+	convertedMovieId, err := strconv.Atoi(movieId)
+	if err != nil {
+		// handle error
+	}
 
+	rows, err := db.Query("SELECT id, title,release_date,poster_path,vote_average,overview FROM movies where id=$1", convertedMovieId)
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		movie := Movies{}
+		err = rows.Scan(
+			&movie.Id,
+			&movie.Title,
+			&movie.Release_date,
+			&movie.Poster_path,
+			&movie.Vote_average,
+			&movie.Overview)
+
+		if err != nil {
+			return err
+		}
+
+		movies.Movies = append(movies.Movies, movie)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getMovie(w http.ResponseWriter, r *http.Request) {
+	keys, ok := r.URL.Query()["movie_id"]
+	if !ok {
+		fmt.Println("error in params")
+	}
+	var movieId = keys[0]
+	movie := MoviesList{}
+	err := querymovie(&movie, movieId)
+	// fmt.Println(movies)
+
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	out, err := json.Marshal(movie)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	fmt.Fprintf(w, string(out))
+}
 func updateCinema() {
 	movies := new(moviesReponse)
 	getJson(url, movies)
@@ -383,6 +442,7 @@ func main() {
 	router.HandleFunc("/api/getMovies/", moviesHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/getHalls/", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insert", InsertReservation).Methods("POST")
+	router.HandleFunc("/api/getMovie", getMovie).Methods("GET")
 
 	log.Print("Listening on " + ":" + webPort + "...")
 	log.Fatal(srv.ListenAndServe())
