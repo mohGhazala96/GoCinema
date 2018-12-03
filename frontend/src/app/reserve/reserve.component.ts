@@ -23,6 +23,8 @@ export class ReserveComponent implements OnInit {
   selectedDate = ""
   error=""
   enteredEmail = ""
+  successMessage = ""
+  resSuccess = false;
 
   currentMovie = {
     Title: "",
@@ -182,9 +184,7 @@ export class ReserveComponent implements OnInit {
         });  
         this.httpClient.post('http://localhost:3000/api/insertReservation',newReservation,config).subscribe(
       res => {
-        console.log(newReservation)
-        console.log("Reservation success")
-        console.log(res)
+       this.resSuccess = true;
       }
     );    
 

@@ -1,5 +1,8 @@
-<div *ngFor='let movie of movies'> 
-  <img src="{{ movie.Poster_path }}" alt="movie.Title" height="500" width="500">
+
+<div *ngFor='let movie of movies; let i = index;' class="card"> 
+  <h3>{{movie.Title}}</h3> 
+  <h4>(Rating: {{movie.Vote_average}})</h4>
+  <img src="{{ movie.Poster_path }}" alt="movie.Title" height="350" width="250">
   <p> {{ movie.Overview }} </p>
-  <button (click)="reserveSeat(movie.Id)"> Reserve </button>
+  <button class="btn btn-outline-dark" (click)="reserveSeat(movie.Id)"> Reserve </button>
 </div>

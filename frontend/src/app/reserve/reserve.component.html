@@ -1,36 +1,37 @@
-<div>
-  <img src="{{currentMovie.Poster_path}}"><br />
-  <h1>You are reserving: {{currentMovie.Title}}</h1>
-  Rating: {{currentMovie.Vote_average}}<br />
+
+  {{error}}
+<div class="card">
+  <h3>You are reserving: {{currentMovie.Title}}</h3>
+  <img src="{{currentMovie.Poster_path}}" height="350" width="250"><br />
+  <h4>Rating: {{currentMovie.Vote_average}}</h4>
   {{currentMovie.Overview}}<br />
   {{currentMovie.Release_date}}
 </div>
 
-<div>
-  <div>
-    Select Date: 
+<div class="card">
+  <h5>Please fill the fields below:</h5>
+  <div class="entry">
+    <b>Select Date: </b>
     <input type="date" name="day" (change)="selectDate($event.target.value)">
   </div>
-  <div>
-      Select Time: 
+  <div class="entry">
+      <b>Select Time: </b>
       <select (change)="selectTime($event.target.value)">
           <option *ngFor="let selectedTime of availableTime" value={{selectedTime}}>
               {{selectedTime}}
           </option>
       </select>
     </div>
+    {{error}}
     <button type="button" class="btn btn-danger" (click)="pingSeats()">Get Available Seats</button>
 
-  </div>
 
-<p>
-  <span *ngFor="let seat of reservedSeats">{{seat}} </span>
-</p>
-<div *ngIf="showSeats">
+
+
+<div *ngIf="showSeats" class="entry">
   <table>
   <tr *ngFor="let outerItem of seatsLayout; let i = index;">
     <td *ngFor="let innerItem of outerItem; let j = index;">
-      <!-- {{i}} {{j}} {{innerItem}} -->
       <button *ngIf="innerItem==1 || newReservation[i][j]==1" type="button" class="btn btn-block btn-danger" [disabled]="innerItem" value="[i][j]" (click)="pressButton(i,j)">{{rowLetters[i]}}{{j}}</button>
       <button *ngIf="innerItem==0 && newReservation[i][j]==0" type="button" class="btn btn-block btn-success" [disabled]="innerItem" value="[i][j]" (click)="pressButton(i,j)">{{rowLetters[i]}}{{j}}</button>
     </td>
@@ -38,11 +39,26 @@
   </table>
 
   <div>
-    Enter your email:
+     <b>Currently reserving: </b>  <span *ngFor="let seat of reservedSeats">{{seat}} </span>
+  </div>
+
+  <div>
+    <div class="entry">
+    <b>Enter your email: </b>
     <input type="email" name="email" (change)="enterEmail($event.target.value)"><br />
-    <button type="button" class="btn btn-danger" (click)="reserveSeats()">Reserve Seats</button>
+    </div>
+    <button type="button" class="btn btn-danger" (click)="reserveSeats()">Reserve Seats</button> <br />
+    <div *ngIf="resSuccess">
+        <h5>Reservation Successful.</h5> 
+        Details Below: <br />
+        <b>Date: </b>{{selectedDate}} <br />
+        <b>Time</b>  {{this.selectedTime}} <br />
+        <b>Seats:</b>{{this.reservedSeats}}<br />
+        <b>Please be there 30 minutes before the movie for confirmation.</b>
+    </div>
 
   </div>
   </div>
+</div>
 
-  {{error}}
+

@@ -2,3 +2,8 @@
 .center-container {
     margin-left: 25%
 }
+
+.card{
+    padding: 20px;
+    margin: 10px;
+  }
