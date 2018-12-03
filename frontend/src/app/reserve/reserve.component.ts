@@ -41,7 +41,6 @@ export class ReserveComponent implements OnInit {
   newReservation = []
 
   constructor(private activatedRoute: ActivatedRoute, private httpClient: HttpClient) {
-    console.log("INIT ")
     for(var i=0;i<this.rowsLength;i++){
       this.seatsLayout[i]= [];
       for(var j=0;j<this.columnsLength;j++){
@@ -56,7 +55,6 @@ export class ReserveComponent implements OnInit {
     }
     this.activatedRoute.queryParams.subscribe(params => {
           this.movie_id = params['movie_id'];
-          console.log(this.movie_id); // Print the parameter to the console. 
           this.getMovie(this.movie_id);
           // this.getReservations(this.movie_id,"1","2018-12-5")
 
@@ -65,17 +63,13 @@ export class ReserveComponent implements OnInit {
 
   selectTime(event){
     this.selectedTime = event
-    console.log(this.selectedTime)
   }
 
   selectDate(event){
     this.selectedDate = event
-    console.log(this.selectedDate)
   }
 
   pingSeats(){
-    console.log(this.selectedTime)
-    console.log(this.selectedDate)
 
     if(this.selectedTime == "" || this.selectedDate== ""){
       this.error= "Please select date/time"
@@ -94,7 +88,6 @@ export class ReserveComponent implements OnInit {
   }
     this.httpClient.get('http://localhost:3000/api/getMovie?movie_id='+ID,config).subscribe(
       res => {
-        console.log(res)
         var movie = res['Movies'][0];
         this.currentMovie.Title = movie.Title;
         this.currentMovie.Overview = movie.Overview;
@@ -112,7 +105,6 @@ export class ReserveComponent implements OnInit {
 
   getReservations(ID: string, timing: string, day: string){
     var timeToCheck = this.availableTimeToSend[this.availableTime.indexOf(timing)]
-    console.log(ID+" "+timeToCheck+" "+day)
     var config = {
       headers:
           {
@@ -123,7 +115,6 @@ export class ReserveComponent implements OnInit {
     this.httpClient.get('http://localhost:3000/api/checkSeats?movieId='+ID+"&timing="+timeToCheck+"&day="+day,config).subscribe(
       res => {
         if(res!=null){
-        console.log(res)
         var resLength = Object.keys(res).length
           for(var i=0;i<resLength;i++){
             var seat = res[i].toString();
@@ -139,20 +130,16 @@ export class ReserveComponent implements OnInit {
 
   enterEmail(event){
     this.enteredEmail = event;
-    console.log(this.enteredEmail)
   }
 
   pressButton(outer: number, inner: number){
     if(this.reservedSeats.includes(this.rowLetters[outer]+""+inner)){
       var indexOfItem = this.reservedSeats.indexOf(this.rowLetters[outer]+""+inner);
       this.newReservation[outer][inner]=0;
-      console.log(indexOfItem)
       this.reservedSeats.splice(indexOfItem,1);
     }else{
-    console.log("Outer is "+this.rowLetters[outer] +"inner is "+inner);
     this.reservedSeats.push(this.rowLetters[outer]+""+inner);
     this.newReservation[outer][inner]=1;
-    console.log(this.reservedSeats)
     }
   }
 
@@ -162,7 +149,6 @@ export class ReserveComponent implements OnInit {
     }else{
       this.error = ""
       var timeToCheck = this.availableTimeToSend[this.availableTime.indexOf(this.selectedTime)]
-      console.log(this.enteredEmail + " " +this.selectedDate +" "+this.selectedTime + " "+ this.reservedSeats)
       var config = {
         headers:
             {
