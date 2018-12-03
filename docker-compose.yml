@@ -1,0 +1,27 @@
+version: "2.1"
+services:
+  app:
+    build: ./go-app
+    env_file: 
+      - ./env/goenv.env
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: healthcheck/postgres:alpine 
+    volumes:
+      - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres-data:/var/lib/postgresql/data
+    env_file: 
+     - ./env/pgenv.env
+    ports:
+      - 5432:5432
+
+  angular-app:
+    build: ./frontend
+    volumes:
+      - ./frontend:/usr/src/app
+    ports:
+      - 4200:4200

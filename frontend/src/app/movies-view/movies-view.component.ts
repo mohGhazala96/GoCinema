@@ -17,8 +17,10 @@ export class Movie {
   styleUrls: ['./movies-view.component.css']
 })
 export class MoviesViewComponent implements OnInit {
+  moviesReceived: Array<Movie> = new Array<Movie>();
   movies: Array<Movie> = new Array<Movie>();
- 
+
+
   constructor(private router : Router, private activatedRoute: ActivatedRoute, private httpClient: HttpClient) {
  
  
@@ -37,9 +39,9 @@ export class MoviesViewComponent implements OnInit {
  
       res => {
        
-        this.movies= res['Movies']
+        this.moviesReceived= res['Movies']
         for( var i = 0; i < 20; i++) {
-          this.movies.push(this.movies[i]);
+          this.movies.push(this.moviesReceived[i]);
         }
       }
     );
