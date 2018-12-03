@@ -292,7 +292,8 @@ func updateHalls(movies *moviesReponse) {
 	var movieIndex int = 0
 	for rows.Next() {
 		var (
-			id int64
+			id    int64
+			movie int
 		)
 		rows.Scan(&id, &movie)
 
