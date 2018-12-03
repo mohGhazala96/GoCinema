@@ -294,7 +294,7 @@ func updateHalls(movies *moviesReponse) {
 		var (
 			id int64
 		)
-		rows.Scan(&id)
+		rows.Scan(&id, &movie)
 
 		var sqlStatement string
 		sqlStatement = "UPDATE halls SET movie = $2 WHERE id = $1;"
@@ -373,6 +373,7 @@ func updateCinema() {
 	insertMovies(movies) //inserting new movies
 	removeUnavialabeMoviesFromCinema(movies)
 	updateHalls(movies)
+	weeklyUpdate()
 }
 
 func weeklyUpdate() {
@@ -386,7 +387,7 @@ func weeklyUpdate() {
 	}
 	for {
 		time.Sleep(difference)
-		difference = 24 * time.Hour
+		fmt.Println("Updated cinema")
 		updateCinema() // updates movies and halls
 
 	}
@@ -554,7 +555,7 @@ func main() {
 	//INTIALIZE ONLY ONCE
 	initCinema()
 	//WEEKLY UPDATES
-	//	go weeklyUpdate()
+	go weeklyUpdate()
 	router.HandleFunc("/api/getMovies", moviesHandler).Methods("GET")
 	router.HandleFunc("/api/getHalls", hallsHandler).Methods("GET")
 	router.HandleFunc("/api/insertReservation", insertReservationHandler).Methods("POST")

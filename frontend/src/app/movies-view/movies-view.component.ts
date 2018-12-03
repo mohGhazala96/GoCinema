@@ -38,9 +38,7 @@ export class MoviesViewComponent implements OnInit {
       res => {
        
         this.movies= res['Movies']
-        for( var i = 0; i < 20; i++) {
-          this.movies.push(this.movies[i]);
-        }
+     
       }
     );
  
