@@ -1,5 +1,15 @@
-<div *ngFor='let movie of movies'> 
-  <img src="{{ movie.Poster_path }}" alt="movie.Title" height="500" width="500">
-  <p> {{ movie.Overview }} </p>
-  <button (click)="reserveSeat(movie.Id)"> Reserve </button>
-</div>
+<table style="background-color: darkmagenta;">
+  <tr *ngFor="let movie of movies">
+    <td style="padding: 15px;"> <img src="{{ movie.Poster_path }}" alt="movie.Title" height="300" width="300"> </td>
+    <td style="padding: 15px;"> 
+      <strong> {{ movie.Title }} </strong>
+      <br> <br>
+      <strong style="color: azure; font-style: italic"> {{ movie.Overview }} </strong> <br> <br>
+      <button type="button" class="btn btn-success" 
+      (click)="reserveSeat(movie.Id)" 
+      > Reserve </button>
+    </td>
+  </tr>
+</table>
+
+
