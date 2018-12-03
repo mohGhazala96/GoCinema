@@ -1,0 +1,39 @@
+#### MAKE A SAMPLE DOCKER-COMPOSE
+### DELETE POSTGRES FOLDER
+version: "2.1"
+services:
+  app:
+    build: ./go-app
+    environment:
+      DATABASE_NAME: dbname
+      DATABASE_HOST:  dbhost
+      DATABASE_USER: dbuser
+      DATABASE_PASSWORD: dbpassword
+      DATABASE_PORT: 5432
+      WEB_HOST: 
+      WEB_PORT: 3000
+      API_Key: apikey
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: healthcheck/postgres:alpine 
+    volumes:
+      - ./data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_DB: dbname
+    ports:
+      - 5432:5432
+
+  angular-app:
+    build: ./frontend
+    volumes:
+      - ./frontend:/usr/src/app
+    ports:
+      - 4200:4200
+    
