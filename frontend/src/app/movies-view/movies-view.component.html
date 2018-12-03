@@ -1,8 +1,14 @@
+<table>
+  <tr *ngFor="let movie of movies">
+    <td style="padding: 15px;"> <img src="{{ movie.Poster_path }}" alt="movie.Title" height="350" width="250"> </td>
+    <td style="padding: 15px;"> 
+      <strong> {{ movie.Title }} </strong>
+      <br> <br>
+      <strong style="font-style: italic"> {{ movie.Overview }} </strong> <br> <br>
+      <button type="button" class="btn btn-success" 
+      (click)="reserveSeat(movie.Id)"> Reserve </button>
+    </td>
+  </tr>
+</table>
 
-<div *ngFor='let movie of movies; let i = index;' class="card"> 
-  <h3>{{movie.Title}}</h3> 
-  <h4>(Rating: {{movie.Vote_average}})</h4>
-  <img src="{{ movie.Poster_path }}" alt="movie.Title" height="350" width="250">
-  <p> {{ movie.Overview }} </p>
-  <button class="btn btn-outline-dark" (click)="reserveSeat(movie.Id)"> Reserve </button>
-</div>
+
