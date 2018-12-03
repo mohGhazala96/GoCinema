@@ -5,14 +5,14 @@ services:
   app:
     build: ./go-app
     environment:
-      DATABASE_NAME: mycinema
-      DATABASE_HOST: db
-      DATABASE_USER: root
-      DATABASE_PASSWORD: secret
+      DATABASE_NAME: dbname
+      DATABASE_HOST:  dbhost
+      DATABASE_USER: dbuser
+      DATABASE_PASSWORD: dbpassword
       DATABASE_PORT: 5432
       WEB_HOST: 
       WEB_PORT: 3000
-      API_Key: b57cadb923f1f664952c11dbb225bb18
+      API_Key: apikey
     ports:
       - 3000:3000
     depends_on:
@@ -24,9 +24,9 @@ services:
       - ./data.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: mycinema
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_DB: dbname
     ports:
       - 5432:5432
 
